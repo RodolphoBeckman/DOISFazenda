@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -46,17 +47,10 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
-// Mock data, replace with your actual data fetching
-const cows = [
-  { id: 'VACA-001', farm: 'São Francisco' },
-  { id: 'VACA-002', farm: 'Segredo' },
-  { id: 'VACA-003', farm: 'Dois' },
-  { id: 'VACA-004', farm: 'São Francisco' },
-  { id: 'VACA-005', farm: 'Segredo' },
-];
-
-const farms = ["São Francisco", "Segredo", "Dois"];
-const lots = ["N", "Lote 1", "Lote 2", "Lote 3", "Lote 4", "D-B"];
+// Data for selectors - in a real app, this would come from a database or API
+const cows: { id: string, farm: string }[] = [];
+const farms: string[] = [];
+const lots: string[] = [];
 
 
 export default function NewBirthPage() {
@@ -287,3 +281,5 @@ export default function NewBirthPage() {
     </main>
   );
 }
+
+    

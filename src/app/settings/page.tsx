@@ -22,34 +22,11 @@ import {
 } from "@/components/ui/tabs";
 import { PlusCircle } from "lucide-react";
 
-// Mock data - replace with your actual data fetching
-const lots = [
-  { id: "LOTE-01", name: "Lote 1" },
-  { id: "LOTE-02", name: "Lote 2" },
-  { id: "LOTE-03", name: "Lote 3" },
-  { id: "LOTE-04", name: "Lote 4" },
-  { id: "LOTE-N", name: "N" },
-  { id: "LOTE-DB", name: "D-B" },
-];
-
-const pastures = [
-    { id: "PASTO-01", name: "Pasto da Represa" },
-    { id: "PASTO-02", name: "Pasto do Meio" },
-    { id: "PASTO-03", name: "Pasto Novo" },
-    { id: "PASTO-04", name: "Pasto da Sede" },
-    { id: "PASTO-05", name: "Pasto Palhada" },
-];
-
-const farms = [
-    { id: "FARM-01", name: "São Francisco" },
-    { id: "FARM-02", name: "Segredo" },
-    { id: "FARM-03", name: "Dois" },
-];
-
-const breeds = [
-    { id: "BREED-01", name: "Nelore" },
-    { id: "BREED-02", name: "Angus" },
-];
+// In a real app, this data would come from a database or API
+const lots: { id: string, name: string }[] = [];
+const pastures: { id: string, name: string }[] = [];
+const farms: { id: string, name: string }[] = [];
+const breeds: { id: string, name: string }[] = [];
 
 
 export default function SettingsPage() {
@@ -201,3 +178,5 @@ export default function SettingsPage() {
     </main>
   );
 }
+
+    

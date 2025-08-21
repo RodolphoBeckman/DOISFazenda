@@ -46,9 +46,9 @@ export default function Dashboard() {
             <Baby className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-muted-foreground">
-              +20.1% em relação ao ano passado
+              Nenhum nascimento registrado ainda
             </p>
           </CardContent>
         </Card>
@@ -58,7 +58,7 @@ export default function Dashboard() {
             <Beaker className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">92.5%</div>
+            <div className="text-2xl font-bold">0%</div>
             <p className="text-xs text-muted-foreground">
               Baseado em IATFs checadas
             </p>
@@ -70,8 +70,8 @@ export default function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3,456</div>
-            <p className="text-xs text-muted-foreground">em 3 fazendas</p>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">Nenhuma vaca registrada</p>
           </CardContent>
         </Card>
         <Card>
@@ -80,9 +80,9 @@ export default function Dashboard() {
             <CalendarClock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">~12 dias</div>
+            <div className="text-2xl font-bold">-</div>
             <p className="text-xs text-muted-foreground">
-              Vaca #74 em São Francisco
+              Nenhuma previsão disponível
             </p>
           </CardContent>
         </Card>
@@ -118,3 +118,5 @@ export default function Dashboard() {
     </main>
   );
 }
+
+    

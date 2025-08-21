@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -41,12 +42,12 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
-// Mock data
-const farms = ["Segredo", "São Francisco", "Dois"];
-const lots = ["N", "Lote 1", "Lote 2", "Lote 3", "Lote 4"];
-const statuses = ["Vazia", "Prenha", "Com cria"];
-const origins = ["Cria da Fazenda", "Compra", "Outro"];
-const registrationStatuses = ["Ativo", "Inativo"];
+// Data for selectors - in a real app, this would come from a database or API
+const farms: string[] = [];
+const lots: string[] = [];
+const statuses: string[] = ["Vazia", "Prenha", "Com cria"];
+const origins: string[] = [];
+const registrationStatuses: string[] = ["Ativo", "Inativo"];
 
 export default function NewCowPage() {
   const { toast } = useToast()
@@ -245,3 +246,5 @@ export default function NewCowPage() {
     </main>
   );
 }
+
+    

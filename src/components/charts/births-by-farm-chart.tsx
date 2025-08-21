@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
@@ -7,36 +8,24 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-const chartData = [
-  { farm: "Sao Francisco", births: 186, fill: "var(--color-sf)" },
-  { farm: "Segredo", births: 305, fill: "var(--color-segredo)"  },
-  { farm: "Dois", births: 237, fill: "var(--color-dois)"  },
-  { farm: "Outra", births: 73, fill: "var(--color-outra)"  },
-]
+const chartData: { farm: string, births: number, fill: string }[] = [];
 
 const chartConfig = {
   births: {
     label: "Nascimentos",
   },
-  sf: {
-    label: "São Francisco",
-    color: "hsl(var(--chart-1))",
-  },
-  segredo: {
-    label: "Segredo",
-    color: "hsl(var(--chart-2))",
-  },
-  dois: {
-    label: "Dois",
-    color: "hsl(var(--chart-3))",
-  },
-  outra: {
-    label: "Outra",
-    color: "hsl(var(--chart-4))",
-  }
+  // Colors can be dynamically assigned or predefined
 } satisfies ChartConfig
 
 export function BirthsByFarmChart() {
+  if (chartData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+        Nenhum dado de nascimento para exibir.
+      </div>
+    )
+  }
+
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
       <ResponsiveContainer>
@@ -61,3 +50,5 @@ export function BirthsByFarmChart() {
     </ChartContainer>
   )
 }
+
+    

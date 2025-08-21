@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
@@ -8,10 +9,7 @@ import {
 } from "@/components/ui/chart"
 
 
-const chartData = [
-  { sex: "Macho", count: 254, fill: "var(--color-male)" },
-  { sex: "Fêmea", count: 231, fill: "var(--color-female)" },
-]
+const chartData: { sex: string, count: number, fill: string }[] = [];
 
 const chartConfig = {
   count: {
@@ -28,6 +26,14 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function BirthsBySexChart() {
+    if (chartData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+        Nenhum dado para exibir.
+      </div>
+    )
+  }
+
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
       <ResponsiveContainer>
@@ -49,3 +55,5 @@ export function BirthsBySexChart() {
     </ChartContainer>
   )
 }
+
+    

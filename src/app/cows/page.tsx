@@ -31,16 +31,18 @@ import { PaginationComponent } from '@/components/pagination';
 import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search } from "lucide-react"
 import { Input } from '@/components/ui/input';
 
-const allCows = [
-  { id: '826', animal: 'Bezerras 2024', origem: 'Cria da Fazenda', farm: 'Segredo', lot: 'N', location: 'Pasto Palhada', status: 'Vazia', registrationStatus: 'Ativo' },
-  { id: '827', animal: 'Bezerras 2024', origem: 'Cria da Fazenda', farm: 'Segredo', lot: 'N', location: 'Pasto Palhada', status: 'Vazia', registrationStatus: 'Ativo' },
-  { id: 'VACA-001', farm: 'São Francisco', lot: 'Lote 1', status: 'Prenha', animal: 'Vaca Adulta', origem: 'Compra', location: 'Pasto A', registrationStatus: 'Ativo' },
-  { id: 'VACA-002', farm: 'Segredo', lot: 'Lote 2', status: 'Vazia', animal: 'Vaca Adulta', origem: 'Compra', location: 'Pasto B', registrationStatus: 'Ativo' },
-  { id: 'VACA-003', farm: 'Dois', lot: 'Lote 1', status: 'Prenha', animal: 'Novilha', origem: 'Cria da Fazenda', location: 'Pasto C', registrationStatus: 'Ativo' },
-  { id: 'VACA-005', farm: 'Segredo', lot: 'Lote 2', status: 'Com cria', animal: 'Vaca Adulta', origem: 'Cria da Fazenda', location: 'Pasto D', registrationStatus: 'Ativo' },
-];
+const allCows: Cow[] = [];
 
-type Cow = typeof allCows[0];
+type Cow = {
+    id: string;
+    animal: string;
+    origem: string;
+    farm: string;
+    lot: string;
+    location: string;
+    status: string;
+    registrationStatus: string;
+};
 type ColumnKey = keyof Cow;
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -180,7 +182,7 @@ export default function CowsPage() {
     );
   }
 
-  const statuses = ['Prenha', 'Vazia', 'Com cria'];
+  const statuses = Array.from(new Set(allCows.map(cow => cow.status)));
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -282,4 +284,5 @@ function CardWithTable({ title, data, renderFilterableHeader }: { title: string;
   );
 }
 
+    
     

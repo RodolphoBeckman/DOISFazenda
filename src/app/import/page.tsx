@@ -12,14 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock data for preview, replace with actual parsed data
-const previewData = {
-  headers: ["Brinco", "Animal", "Origem", "Fazenda", "Lote", "Status"],
-  rows: [
-    ["101", "Vaca Adulta", "Compra", "São Francisco", "Lote 1", "Prenha"],
-    ["102", "Novilha", "Cria da Fazenda", "Segredo", "Lote 2", "Vazia"],
-    ["103", "Vaca Adulta", "Compra", "Dois", "Lote 3", "Com cria"],
-  ],
+// This component now expects real parsed data
+const previewData: { headers: string[], rows: string[][] } = {
+  headers: [],
+  rows: [],
 };
 
 export default function ImportPage() {
@@ -56,7 +52,8 @@ export default function ImportPage() {
       });
       return;
     }
-    // Here you would typically parse the file and show real data
+    // In a real application, you would parse the file here and populate `previewData`
+    // For now, we'll just show the empty state.
     console.log("Generating preview for:", file.name, "as", importType);
     setShowPreview(true);
   };
@@ -156,6 +153,7 @@ export default function ImportPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
+              {previewData.rows.length > 0 ? (
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -170,6 +168,11 @@ export default function ImportPage() {
                         ))}
                     </TableBody>
                 </Table>
+              ) : (
+                <div className="text-center text-muted-foreground py-8">
+                  A pré-visualização dos dados aparecerá aqui após o processamento do arquivo.
+                </div>
+              )}
             </CardContent>
         </Card>
       )}
@@ -177,3 +180,5 @@ export default function ImportPage() {
     </main>
   );
 }
+
+    
