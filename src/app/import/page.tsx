@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { FileUp, Loader2, Upload } from 'lucide-react';
+import * as xlsx from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,10 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 
-// This component now expects real parsed data
-const previewData: { headers: string[], rows: string[][] } = {
-  headers: [],
-  rows: [],
+type ParsedData = {
+  headers: string[];
+  rows: string[][];
 };
 
 export default function ImportPage() {
@@ -23,27 +23,55 @@ export default function ImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [importType, setImportType] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [previewData, setPreviewData] = useState<ParsedData>({ headers: [], rows: [] });
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-        // Basic file type validation
         if (selectedFile.type === "text/csv" || selectedFile.name.endsWith('.csv') || selectedFile.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || selectedFile.name.endsWith('.xlsx')) {
             setFile(selectedFile);
             setShowPreview(false);
+            setPreviewData({ headers: [], rows: [] });
         } else {
             toast({
                 variant: 'destructive',
                 title: 'Tipo de arquivo inválido',
                 description: 'Por favor, selecione um arquivo CSV ou XLSX.',
             });
-            event.target.value = ''; // Clear the input
+            event.target.value = '';
         }
     }
   };
 
-  const handlePreview = () => {
+  const parseFile = (file: File): Promise<ParsedData> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result;
+          const workbook = xlsx.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+          
+          if (jsonData.length > 0) {
+            const headers = jsonData[0];
+            const rows = jsonData.slice(1, 4); // Preview first 3 data rows
+            resolve({ headers, rows });
+          } else {
+            resolve({ headers: [], rows: [] });
+          }
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsBinaryString(file);
+    });
+  };
+
+  const handlePreview = async () => {
     if (!file || !importType) {
       toast({
         variant: 'destructive',
@@ -52,39 +80,55 @@ export default function ImportPage() {
       });
       return;
     }
-    // In a real application, you would parse the file here and populate `previewData`
-    // For now, we'll just show the empty state.
-    console.log("Generating preview for:", file.name, "as", importType);
+
+    setIsLoading(true);
     setShowPreview(true);
+
+    try {
+      const parsed = await parseFile(file);
+      setPreviewData(parsed);
+    } catch (error) {
+      console.error("File parsing error:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao ler arquivo',
+        description: 'Não foi possível processar o arquivo. Verifique se o formato está correto.',
+      });
+      setShowPreview(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-   const handleImport = () => {
-    if (!showPreview) {
+  const handleImport = () => {
+    if (!showPreview || previewData.rows.length === 0) {
       toast({
         variant: 'destructive',
         title: 'Pré-visualização necessária',
-        description: 'Gere a pré-visualização antes de importar.',
+        description: 'Gere e verifique a pré-visualização antes de importar.',
       });
       return;
     }
     setIsLoading(true);
-    console.log("Importing data...");
+    console.log("Importing data for:", importType);
+    console.log("Headers:", previewData.headers);
+    console.log("Rows:", previewData.rows);
     
-    // Simulate import process
     setTimeout(() => {
         setIsLoading(false);
         toast({
             title: 'Importação Concluída!',
             description: `Os dados de ${importType} foram importados com sucesso.`,
         });
-        // Reset state
+        
         setFile(null);
         setImportType("");
         setShowPreview(false);
+        setPreviewData({ headers: [], rows: [] });
         const fileInput = document.getElementById('file-upload') as HTMLInputElement;
         if(fileInput) fileInput.value = '';
 
-    }, 2000);
+    }, 1000);
   };
 
   return (
@@ -118,7 +162,7 @@ export default function ImportPage() {
             </div>
             <div className="grid w-full max-w-sm items-center gap-1.5">
                 <Label htmlFor="file-upload">Arquivo (CSV, XLSX)</Label>
-                <Input id="file-upload" type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={handleFileChange} />
+                <Input id="file-upload" type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" onChange={handleFileChange} />
             </div>
           </div>
            {file && (
@@ -129,12 +173,12 @@ export default function ImportPage() {
 
         </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t pt-6">
-            <Button onClick={handlePreview} variant="outline" disabled={!file || !importType}>
-                <FileUp className="mr-2 h-4 w-4" />
+            <Button onClick={handlePreview} variant="outline" disabled={!file || !importType || isLoading}>
+                {isLoading && showPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
                 Pré-visualizar
             </Button>
-            <Button onClick={handleImport} disabled={!showPreview || isLoading}>
-            {isLoading ? (
+            <Button onClick={handleImport} disabled={!showPreview || previewData.rows.length === 0 || isLoading}>
+            {isLoading && !showPreview ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
                 <Upload className="mr-2 h-4 w-4" />
@@ -149,28 +193,34 @@ export default function ImportPage() {
             <CardHeader>
                 <CardTitle>Pré-visualização dos Dados</CardTitle>
                 <CardDescription>
-                    Confira se as colunas e os dados estão corretos antes de importar. Serão importadas as 3 primeiras linhas como exemplo.
+                    Confira se as colunas e os dados estão corretos antes de importar. Serão exibidas as 3 primeiras linhas do arquivo como exemplo.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-              {previewData.rows.length > 0 ? (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            {previewData.headers.map((header) => <TableHead key={header}>{header}</TableHead>)}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {previewData.rows.map((row, rowIndex) => (
-                            <TableRow key={rowIndex}>
-                                {row.map((cell, cellIndex) => <TableCell key={cellIndex}>{cell}</TableCell>)}
+              {isLoading ? (
+                  <div className="flex items-center justify-center h-40">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+              ) : previewData.rows.length > 0 ? (
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                {previewData.headers.map((header) => <TableHead key={header}>{header}</TableHead>)}
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {previewData.rows.map((row, rowIndex) => (
+                                <TableRow key={rowIndex}>
+                                    {row.map((cell, cellIndex) => <TableCell key={cellIndex}>{cell}</TableCell>)}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
               ) : (
                 <div className="text-center text-muted-foreground py-8">
-                  A pré-visualização dos dados aparecerá aqui após o processamento do arquivo.
+                  Nenhum dado encontrado no arquivo ou o arquivo está vazio.
                 </div>
               )}
             </CardContent>
@@ -180,5 +230,3 @@ export default function ImportPage() {
     </main>
   );
 }
-
-    
