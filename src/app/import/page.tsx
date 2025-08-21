@@ -22,7 +22,8 @@ export default function ImportPage() {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [importType, setImportType] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
+  const [isLoadingImport, setIsLoadingImport] = useState<boolean>(false);
   const [previewData, setPreviewData] = useState<ParsedData>({ headers: [], rows: [] });
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
@@ -81,7 +82,7 @@ export default function ImportPage() {
       return;
     }
 
-    setIsLoading(true);
+    setIsLoadingPreview(true);
     setShowPreview(true);
 
     try {
@@ -96,7 +97,7 @@ export default function ImportPage() {
       });
       setShowPreview(false);
     } finally {
-      setIsLoading(false);
+      setIsLoadingPreview(false);
     }
   };
 
@@ -109,18 +110,20 @@ export default function ImportPage() {
       });
       return;
     }
-    setIsLoading(true);
+    setIsLoadingImport(true);
     console.log("Importing data for:", importType);
     console.log("Headers:", previewData.headers);
-    console.log("Rows:", previewData.rows);
+    console.log("All file rows would be processed here...");
     
+    // Simulate API call
     setTimeout(() => {
-        setIsLoading(false);
+        setIsLoadingImport(false);
         toast({
             title: 'Importação Concluída!',
             description: `Os dados de ${importType} foram importados com sucesso.`,
         });
         
+        // Reset state after import
         setFile(null);
         setImportType("");
         setShowPreview(false);
@@ -128,7 +131,7 @@ export default function ImportPage() {
         const fileInput = document.getElementById('file-upload') as HTMLInputElement;
         if(fileInput) fileInput.value = '';
 
-    }, 1000);
+    }, 1500);
   };
 
   return (
@@ -150,7 +153,7 @@ export default function ImportPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
             <div className="grid w-full max-w-sm items-center gap-1.5">
                 <Label htmlFor="import-type">Tipo de Importação</Label>
-                <Select value={importType} onValueChange={setImportType}>
+                <Select value={importType} onValueChange={setImportType} disabled={isLoadingPreview || isLoadingImport}>
                     <SelectTrigger id="import-type">
                         <SelectValue placeholder="Selecione o tipo..." />
                     </SelectTrigger>
@@ -162,7 +165,7 @@ export default function ImportPage() {
             </div>
             <div className="grid w-full max-w-sm items-center gap-1.5">
                 <Label htmlFor="file-upload">Arquivo (CSV, XLSX)</Label>
-                <Input id="file-upload" type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" onChange={handleFileChange} />
+                <Input id="file-upload" type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" onChange={handleFileChange} disabled={isLoadingPreview || isLoadingImport} />
             </div>
           </div>
            {file && (
@@ -173,12 +176,12 @@ export default function ImportPage() {
 
         </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t pt-6">
-            <Button onClick={handlePreview} variant="outline" disabled={!file || !importType || isLoading}>
-                {isLoading && showPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+            <Button onClick={handlePreview} variant="outline" disabled={!file || !importType || isLoadingPreview || isLoadingImport}>
+                {isLoadingPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
                 Pré-visualizar
             </Button>
-            <Button onClick={handleImport} disabled={!showPreview || previewData.rows.length === 0 || isLoading}>
-            {isLoading && !showPreview ? (
+            <Button onClick={handleImport} disabled={!showPreview || previewData.rows.length === 0 || isLoadingImport || isLoadingPreview}>
+            {isLoadingImport ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
                 <Upload className="mr-2 h-4 w-4" />
@@ -197,7 +200,7 @@ export default function ImportPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
+              {isLoadingPreview ? (
                   <div className="flex items-center justify-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
