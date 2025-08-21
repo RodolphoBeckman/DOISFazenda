@@ -28,19 +28,25 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card"
 
 const FormSchema = z.object({
   id: z.string().min(1, "O ID da vaca é obrigatório."),
+  animal: z.string().min(1, "O tipo de animal é obrigatório."),
+  origem: z.string({ required_error: "Selecione a origem." }),
   farm: z.string({ required_error: "Selecione a fazenda." }),
   lot: z.string({ required_error: "Selecione o lote." }),
+  location: z.string().min(1, "A localização é obrigatória."),
   status: z.enum(["Prenha", "Vazia", "Com cria"], {
     required_error: "Selecione o status.",
   }),
+  registrationStatus: z.enum(["Ativo", "Inativo"], { required_error: "Selecione o status do cadastro."}),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
 
 // Mock data
-const farms = ["São Francisco", "Segredo", "Dois"];
-const lots = ["Lote 1", "Lote 2", "Lote 3", "Lote 4"];
+const farms = ["Segredo", "São Francisco", "Dois"];
+const lots = ["N", "Lote 1", "Lote 2", "Lote 3", "Lote 4"];
 const statuses = ["Vazia", "Prenha", "Com cria"];
+const origins = ["Cria da Fazenda", "Compra", "Outro"];
+const registrationStatuses = ["Ativo", "Inativo"];
 
 export default function NewCowPage() {
   const { toast } = useToast()
@@ -73,16 +79,53 @@ export default function NewCowPage() {
       <Card>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="pt-6 grid gap-4 md:grid-cols-2">
+            <CardContent className="pt-6 grid gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
                 name="id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ID da Vaca (Brinco)</FormLabel>
+                    <FormLabel>Brinco Nº</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: VACA-123" {...field} />
+                      <Input placeholder="Ex: 826" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="animal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Animal</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Bezerras 2024" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="origem"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Origem</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a origem..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {origins.map((origin) => (
+                          <SelectItem key={origin} value={origin}>{origin}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -133,6 +176,20 @@ export default function NewCowPage() {
                   </FormItem>
                 )}
               />
+
+               <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Localização</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Pasto Palhada" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <FormField
                 control={form.control}
@@ -148,6 +205,28 @@ export default function NewCowPage() {
                       </FormControl>
                       <SelectContent>
                         {statuses.map(status => (
+                          <SelectItem key={status} value={status}>{status}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="registrationStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status do Cadastro</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o status..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {registrationStatuses.map(status => (
                           <SelectItem key={status} value={status}>{status}</SelectItem>
                         ))}
                       </SelectContent>

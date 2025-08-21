@@ -16,16 +16,12 @@ import { Badge } from '@/components/ui/badge';
 import { PaginationComponent } from '@/components/pagination';
 
 const cows = [
-  { id: 'VACA-001', farm: 'São Francisco', lot: 'Lote 1', status: 'Prenha' },
-  { id: 'VACA-002', farm: 'Segredo', lot: 'Lote 2', status: 'Vazia' },
-  { id: 'VACA-003', farm: 'Dois', lot: 'Lote 1', status: 'Prenha' },
-  { id: 'VACA-004', farm: 'São Francisco', lot: 'Lote 3', status: 'Vazia' },
-  { id: 'VACA-005', farm: 'Segredo', lot: 'Lote 2', status: 'Com cria' },
-  { id: 'VACA-006', farm: 'Dois', lot: 'Lote 1', status: 'Prenha' },
-  { id: 'VACA-007', farm: 'São Francisco', lot: 'Lote 3', status: 'Com cria' },
-  { id: 'VACA-008', farm: 'Segredo', lot: 'Lote 2', status: 'Vazia' },
-  { id: 'VACA-009', farm: 'Dois', lot: 'Lote 1', status: 'Prenha' },
-  { id: 'VACA-010', farm: 'São Francisco', lot: 'Lote 3', status: 'Vazia' },
+  { id: '826', animal: 'Bezerras 2024', origem: 'Cria da Fazenda', farm: 'Segredo', lot: 'N', location: 'Pasto Palhada', status: 'Vazia', registrationStatus: 'Ativo' },
+  { id: '827', animal: 'Bezerras 2024', origem: 'Cria da Fazenda', farm: 'Segredo', lot: 'N', location: 'Pasto Palhada', status: 'Vazia', registrationStatus: 'Ativo' },
+  { id: 'VACA-001', farm: 'São Francisco', lot: 'Lote 1', status: 'Prenha', animal: 'Vaca Adulta', origem: 'Compra', location: 'Pasto A', registrationStatus: 'Ativo' },
+  { id: 'VACA-002', farm: 'Segredo', lot: 'Lote 2', status: 'Vazia', animal: 'Vaca Adulta', origem: 'Compra', location: 'Pasto B', registrationStatus: 'Ativo' },
+  { id: 'VACA-003', farm: 'Dois', lot: 'Lote 1', status: 'Prenha', animal: 'Novilha', origem: 'Cria da Fazenda', location: 'Pasto C', registrationStatus: 'Ativo' },
+  { id: 'VACA-005', farm: 'Segredo', lot: 'Lote 2', status: 'Com cria', animal: 'Vaca Adulta', origem: 'Cria da Fazenda', location: 'Pasto D', registrationStatus: 'Ativo' },
 ];
 
 export default function CowsPage() {
@@ -79,18 +75,25 @@ function CardWithTable({ title, data }: { title: string; data: typeof cows }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
+              <TableHead>Brinco</TableHead>
+              <TableHead>Animal</TableHead>
+              <TableHead>Origem</TableHead>
               <TableHead>Fazenda</TableHead>
               <TableHead>Lote</TableHead>
+              <TableHead>Localização</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Status Cadastro</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((cow) => (
               <TableRow key={cow.id}>
                 <TableCell className="font-medium">{cow.id}</TableCell>
+                <TableCell>{cow.animal}</TableCell>
+                <TableCell>{cow.origem}</TableCell>
                 <TableCell>{cow.farm}</TableCell>
                 <TableCell>{cow.lot}</TableCell>
+                <TableCell>{cow.location}</TableCell>
                 <TableCell>
                   <Badge
                     variant={
@@ -102,6 +105,18 @@ function CardWithTable({ title, data }: { title: string; data: typeof cows }) {
                     }
                   >
                     {cow.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                   <Badge
+                    variant={
+                      cow.registrationStatus === 'Ativo'
+                        ? 'default'
+                        : 'destructive'
+                    }
+                    className={cow.registrationStatus === 'Ativo' ? 'bg-green-600' : ''}
+                  >
+                    {cow.registrationStatus}
                   </Badge>
                 </TableCell>
               </TableRow>
