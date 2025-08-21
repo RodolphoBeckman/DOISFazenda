@@ -29,13 +29,19 @@ import {
 } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useToast } from "@/hooks/use-toast"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 
 const FormSchema = z.object({
   cowId: z.string({ required_error: "Selecione a vaca." }),
   date: z.date({ required_error: "A data de nascimento é obrigatória." }),
   sex: z.enum(["Macho", "Fêmea"], { required_error: "Selecione o sexo." }),
+  breed: z.string().optional(),
+  sire: z.string().optional(),
+  lot: z.string({ required_error: "Selecione o lote." }),
   farm: z.string({ required_error: "Selecione a fazenda." }),
+  location: z.string().min(1, "A localização é obrigatória."),
+  observations: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -50,6 +56,7 @@ const cows = [
 ];
 
 const farms = ["São Francisco", "Segredo", "Dois"];
+const lots = ["N", "Lote 1", "Lote 2", "Lote 3", "Lote 4", "D-B"];
 
 
 export default function NewBirthPage() {
@@ -83,13 +90,13 @@ export default function NewBirthPage() {
       <Card>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="pt-6 grid gap-4 md:grid-cols-2">
+            <CardContent className="pt-6 grid gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
                 name="cowId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ID da Vaca (Mãe)</FormLabel>
+                    <FormLabel>Brinco Nº (Mãe)</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -172,6 +179,54 @@ export default function NewBirthPage() {
               />
                <FormField
                 control={form.control}
+                name="breed"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Raça do Bezerro</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Nelore" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="sire"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do Pai</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Comprou Prenha" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="lot"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lote</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o lote..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {lots.map((lot) => (
+                          <SelectItem key={lot} value={lot}>{lot}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
                 name="farm"
                 render={({ field }) => (
                   <FormItem>
@@ -188,6 +243,36 @@ export default function NewBirthPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Localização</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Pasto da Represa" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="observations"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-3">
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Alguma observação sobre o nascimento..."
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
