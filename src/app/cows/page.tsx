@@ -1,3 +1,6 @@
+"use client"
+
+import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -12,10 +15,20 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Badge } from '@/components/ui/badge';
+import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
+import { ChevronDown } from "lucide-react"
 
-const cows = [
+const allCows = [
   { id: '826', animal: 'Bezerras 2024', origem: 'Cria da Fazenda', farm: 'Segredo', lot: 'N', location: 'Pasto Palhada', status: 'Vazia', registrationStatus: 'Ativo' },
   { id: '827', animal: 'Bezerras 2024', origem: 'Cria da Fazenda', farm: 'Segredo', lot: 'N', location: 'Pasto Palhada', status: 'Vazia', registrationStatus: 'Ativo' },
   { id: 'VACA-001', farm: 'São Francisco', lot: 'Lote 1', status: 'Prenha', animal: 'Vaca Adulta', origem: 'Compra', location: 'Pasto A', registrationStatus: 'Ativo' },
@@ -24,7 +37,65 @@ const cows = [
   { id: 'VACA-005', farm: 'Segredo', lot: 'Lote 2', status: 'Com cria', animal: 'Vaca Adulta', origem: 'Cria da Fazenda', location: 'Pasto D', registrationStatus: 'Ativo' },
 ];
 
+type Cow = typeof allCows[0];
+type ColumnKey = keyof Cow;
+
+
 export default function CowsPage() {
+  const [filters, setFilters] = React.useState<Record<ColumnKey, string[]>>({
+    id: [], animal: [], origem: [], farm: [], lot: [], location: [], status: [], registrationStatus: [],
+  });
+  
+  const handleFilterChange = (column: ColumnKey, value: string) => {
+    setFilters(prev => {
+      const newColumnFilters = prev[column].includes(value)
+        ? prev[column].filter(v => v !== value)
+        : [...prev[column], value];
+      return { ...prev, [column]: newColumnFilters };
+    });
+  };
+
+  const getFilteredData = (data: Cow[]) => {
+    return data.filter(item => {
+        return Object.entries(filters).every(([key, values]) => {
+            if (values.length === 0) return true;
+            const itemValue = item[key as ColumnKey];
+            return values.includes(itemValue);
+        });
+    });
+  };
+  
+  const getUniqueValues = (data: Cow[], column: ColumnKey) => {
+    return Array.from(new Set(data.map(item => item[column]))).sort();
+  };
+
+  const renderFilterableHeader = (column: ColumnKey, label: string) => (
+    <TableHead>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="p-1 h-auto">
+            {label} <ChevronDown className="h-4 w-4 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Filtrar por {label}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {getUniqueValues(allCows, column).map(value => (
+            <DropdownMenuCheckboxItem
+              key={value}
+              checked={filters[column].includes(value)}
+              onCheckedChange={() => handleFilterChange(column, value)}
+            >
+              {value}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </TableHead>
+  );
+
+  const statuses = ['Prenha', 'Vazia', 'Com cria'];
+
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <h1 className="text-3xl font-bold tracking-tight font-headline">
@@ -34,38 +105,29 @@ export default function CowsPage() {
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">Todas</TabsTrigger>
-          <TabsTrigger value="pregnant">Prenhas</TabsTrigger>
-          <TabsTrigger value="empty">Vazias</TabsTrigger>
-          <TabsTrigger value="with-calf">Com Cria</TabsTrigger>
+          {statuses.map(status => (
+            <TabsTrigger key={status} value={status.toLowerCase().replace(' ', '-')}>{status}</TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value="all">
-          <CardWithTable title="Todas as Vacas" data={cows} />
+          <CardWithTable title="Todas as Vacas" data={getFilteredData(allCows)} renderFilterableHeader={renderFilterableHeader}/>
         </TabsContent>
-        <TabsContent value="pregnant">
-          <CardWithTable
-            title="Vacas Prenhas"
-            data={cows.filter((c) => c.status === 'Prenha')}
-          />
-        </TabsContent>
-        <TabsContent value="empty">
-          <CardWithTable
-            title="Vacas Vazias"
-            data={cows.filter((c) => c.status === 'Vazia')}
-          />
-        </TabsContent>
-        <TabsContent value="with-calf">
-          <CardWithTable
-            title="Vacas Com Cria"
-            data={cows.filter((c) => c.status === 'Com cria')}
-          />
-        </TabsContent>
+        {statuses.map(status => (
+            <TabsContent key={status} value={status.toLowerCase().replace(' ', '-')}>
+                <CardWithTable
+                    title={`Vacas ${status}`}
+                    data={getFilteredData(allCows.filter((c) => c.status === status))}
+                    renderFilterableHeader={renderFilterableHeader}
+                />
+            </TabsContent>
+        ))}
       </Tabs>
     </main>
   );
 }
 
-function CardWithTable({ title, data }: { title: string; data: typeof cows }) {
+function CardWithTable({ title, data, renderFilterableHeader }: { title: string; data: Cow[], renderFilterableHeader: (column: ColumnKey, label: string) => React.ReactNode }) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
       <div className="p-6">
@@ -75,14 +137,14 @@ function CardWithTable({ title, data }: { title: string; data: typeof cows }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Brinco</TableHead>
-              <TableHead>Animal</TableHead>
-              <TableHead>Origem</TableHead>
-              <TableHead>Fazenda</TableHead>
-              <TableHead>Lote</TableHead>
-              <TableHead>Localização</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Status Cadastro</TableHead>
+              {renderFilterableHeader('id', 'Brinco')}
+              {renderFilterableHeader('animal', 'Animal')}
+              {renderFilterableHeader('origem', 'Origem')}
+              {renderFilterableHeader('farm', 'Fazenda')}
+              {renderFilterableHeader('lot', 'Lote')}
+              {renderFilterableHeader('location', 'Localização')}
+              {renderFilterableHeader('status', 'Status')}
+              {renderFilterableHeader('registrationStatus', 'Status Cadastro')}
             </TableRow>
           </TableHeader>
           <TableBody>
