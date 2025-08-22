@@ -26,7 +26,7 @@ type FullParsedData = (string | number | null)[][];
 
 export default function ImportPage() {
   const { toast } = useToast();
-  const { addCow, addBirth } = useData();
+  const { data: cows, births, addCow, addBirth } = useData();
   const { settings, addSettingItem } = useSettings();
   
   const [file, setFile] = useState<File | null>(null);
@@ -62,7 +62,7 @@ export default function ImportPage() {
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
-          const workbook = xlsx.read(data, { type: 'array', cellDates: true, dateNF: 'dd/mm/yyyy' });
+          const workbook = xlsx.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: null, raw: false }) as (string | number | null)[][];
@@ -155,7 +155,7 @@ export default function ImportPage() {
         try {
           if (importType === 'vacas') {
               const cowData: any = {
-                  id: getColumnValue(rowData, ['Brinco Nº']),
+                  id: String(getColumnValue(rowData, ['Brinco Nº'])),
                   animal: getColumnValue(rowData, ['Animal']),
                   origem: getColumnValue(rowData, ['Origem']),
                   farm: getColumnValue(rowData, ['Fazenda']),
@@ -177,13 +177,18 @@ export default function ImportPage() {
               if (!cowData.id || !cowData.animal || !cowData.location) {
                   continue;
               }
+              
+              // Check for duplicates before adding
+              if (cows.some(c => c.id.trim().toLowerCase() === cowData.id.trim().toLowerCase())) {
+                  continue; // Skip if cow with same ID already exists
+              }
 
               const newFarm = cowData.farm;
-              if (newFarm && !settings.farms.some(f => f.name === newFarm)) {
+              if (newFarm && !settings.farms.some(f => f.name.trim().toLowerCase() === newFarm.trim().toLowerCase())) {
                   addSettingItem('farms', { id: crypto.randomUUID(), name: newFarm });
               }
               const newLot = cowData.lot;
-              if (newLot && !settings.lots.some(l => l.name === newLot)) {
+              if (newLot && !settings.lots.some(l => l.name.trim().toLowerCase() === newLot.trim().toLowerCase())) {
                   addSettingItem('lots', { id: crypto.randomUUID(), name: newLot });
               }
 
@@ -193,7 +198,7 @@ export default function ImportPage() {
 
           } else if (importType === 'nascimentos') {
                const birthData = {
-                  cowId: getColumnValue(rowData, ['Brinco Nº (Mãe)']),
+                  cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)'])),
                   date: getColumnValue(rowData, ['Data Nascimento']),
                   sex: getColumnValue(rowData, ['Sexo do Bezerro']),
                   breed: getColumnValue(rowData, ['Raça do Bezerro']),
@@ -210,16 +215,21 @@ export default function ImportPage() {
                   continue;
               }
               
+              // Check for duplicates before adding (e.g., same cowId on the same date)
+              if (births.some(b => b.cowId.trim().toLowerCase() === birthData.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === new Date(birthData.date).toDateString())) {
+                continue; // Skip if birth for this cow on this date already exists
+              }
+
               const newFarm = birthData.farm;
-              if (newFarm && !settings.farms.some(f => f.name === newFarm)) {
+              if (newFarm && !settings.farms.some(f => f.name.trim().toLowerCase() === newFarm.trim().toLowerCase())) {
                   addSettingItem('farms', { id: crypto.randomUUID(), name: newFarm });
               }
               const newLot = birthData.lot;
-              if (newLot && !settings.lots.some(l => l.name === newLot)) {
+              if (newLot && !settings.lots.some(l => l.name.trim().toLowerCase() === newLot.trim().toLowerCase())) {
                   addSettingItem('lots', { id: crypto.randomUUID(), name: newLot });
               }
               const newBreed = birthData.breed;
-              if (newBreed && !settings.breeds.some(b => b.name === newBreed)) {
+              if (newBreed && !settings.breeds.some(b => b.name.trim().toLowerCase() === newBreed.trim().toLowerCase())) {
                    addSettingItem('breeds', { id: crypto.randomUUID(), name: newBreed });
               }
 
@@ -245,8 +255,8 @@ export default function ImportPage() {
     } else {
          toast({
             variant: 'destructive',
-            title: 'Nenhum registro importado.',
-            description: `Verifique se as colunas do arquivo correspondem ao esperado ou se os dados obrigatórios estão preenchidos. ${errorCount > 0 ? `${errorCount} registros com erro.` : ''}`,
+            title: 'Nenhum registro novo importado.',
+            description: `Verifique se as colunas do arquivo correspondem ao esperado, se os dados já existem no sistema, ou se os dados obrigatórios estão preenchidos. ${errorCount > 0 ? `${errorCount} registros com erro.` : ''}`,
         });
     }
 
