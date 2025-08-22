@@ -38,6 +38,7 @@ type SortDirection = 'asc' | 'desc' | null;
 
 export default function BirthsPage() {
   const { births: allBirths } = useData();
+  const [isClient, setIsClient] = React.useState(false);
   const [filters, setFilters] = React.useState<Record<string, string[]>>({
      cowId: [], date: [], sex: [], farm: [], breed: [], sire: [], lot: [], location: [], observations: [], obs1: [], jvvo: []
   });
@@ -45,6 +46,11 @@ export default function BirthsPage() {
   const [searchTerms, setSearchTerms] = React.useState<Record<string, string>>({
     cowId: '', date: '', sex: '', farm: '', breed: '', sire: '', lot: '', location: '', observations: '', obs1: '', jvvo: ''
   });
+  
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const handleFilterChange = (column: ColumnKey, value: string) => {
     setFilters(prev => {
@@ -97,7 +103,7 @@ export default function BirthsPage() {
     const uniqueValues = Array.from(new Set(dataSet.map(item => item[column]))).sort();
     if (!searchTerm) return uniqueValues;
     // @ts-ignore
-    return uniqueValues.filter(value => value && value.toLowerCase().includes(searchTerm));
+    return uniqueValues.filter(value => value && String(value).toLowerCase().includes(searchTerm));
   };
   
   const clearFilter = (column: ColumnKey) => {
@@ -111,7 +117,8 @@ export default function BirthsPage() {
   const renderFilterableHeader = (column: ColumnKey, label: string, dataSet: Birth[]) => {
     const uniqueValues = getUniqueValues(dataSet, column);
     // @ts-ignore
-    const allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => item[column]))).filter(Boolean).sort();
+    const allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => String(item[column])))).filter(Boolean).sort();
+
 
     return (
         <TableHead>
@@ -167,11 +174,10 @@ export default function BirthsPage() {
                         // @ts-ignore
                         key={value}
                         // @ts-ignore
-                        checked={filters[column].includes(value)}
-                        // @ts-ignore
-                        onCheckedChange={() => handleFilterChange(column, value)}
+                        checked={filters[column].includes(String(value))}
+                        onCheckedChange={() => handleFilterChange(column, String(value))}
                         >
-                        {value || '(Vazio)'}
+                        {String(value) || '(Vazio)'}
                         </DropdownMenuCheckboxItem>
                     ))}
                 </div>
@@ -190,6 +196,7 @@ export default function BirthsPage() {
         Registro de Nascimentos
       </h1>
       
+      {isClient && (
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">Todos</TabsTrigger>
@@ -206,6 +213,7 @@ export default function BirthsPage() {
             </TabsContent>
         ))}
       </Tabs>
+      )}
     </main>
   );
 }
