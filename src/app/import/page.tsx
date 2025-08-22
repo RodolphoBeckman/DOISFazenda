@@ -236,8 +236,9 @@ export default function ImportPage() {
                
               // Clean up undefined/null values before validation
               Object.keys(birthData).forEach(key => {
-                  if (birthData[key as keyof typeof birthData] === null) {
-                      (birthData as any)[key] = undefined;
+                  const typedKey = key as keyof typeof birthData;
+                  if (birthData[typedKey] === null) {
+                      (birthData as any)[typedKey] = undefined;
                   }
               });
 
@@ -343,7 +344,7 @@ export default function ImportPage() {
             </div>
             )}
 
-        </CardFooter>
+        </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t pt-6">
             <Button onClick={handlePreview} variant="outline" disabled={!file || !importType || isLoadingPreview || isLoadingImport}>
                 {isLoadingPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
