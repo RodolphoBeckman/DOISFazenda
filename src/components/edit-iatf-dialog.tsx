@@ -206,9 +206,6 @@ export default function EditIATFDialog({ iatf, isOpen, onClose }: EditIATFDialog
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) =>
-                                date > new Date() || date < new Date("2020-01-01")
-                            }
                             initialFocus
                             />
                         </PopoverContent>
