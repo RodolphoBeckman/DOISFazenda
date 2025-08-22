@@ -145,7 +145,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
       const newCow: Cow = {
         id: newCowId, // Este deve ser um novo brinco único
-        animal: `Bezerra de ${birth.cowId}`, // Nome inicial
+        animal: "Bezerro", // Nome inicial
         origem: "Nascimento",
         farm: birth.farm || '',
         lot: birth.lot || '',
