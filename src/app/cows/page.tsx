@@ -38,9 +38,10 @@ import {
 } from "@/components/ui/alert-dialog"
 
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive, Users, GitCommitVertical, GitBranch } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import { useData } from '@/contexts/data-context';
 import type { Cow } from '@/lib/data-schemas';
@@ -73,6 +74,20 @@ export default function CowsPage() {
   const [selectedCows, setSelectedCows] = React.useState<string[]>([]);
   const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [cowToDelete, setCowToDelete] = React.useState<Cow | null>(null);
+
+  const animalCounts = React.useMemo(() => {
+    return allCows.reduce((acc, cow) => {
+      const animalType = cow.animal?.toLowerCase() || 'vaca';
+      if (animalType.includes('bezerro')) {
+        acc.bezerros++;
+      } else if (animalType.includes('bezerra')) {
+        acc.bezerras++;
+      } else {
+        acc.vacas++;
+      }
+      return acc;
+    }, { vacas: 0, bezerros: 0, bezerras: 0 });
+  }, [allCows]);
 
 
   React.useEffect(() => {
@@ -279,6 +294,39 @@ export default function CowsPage() {
                 </Link>
             </Button>
         </div>
+      </div>
+
+       <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Vacas</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{animalCounts.vacas}</div>
+            <p className="text-xs text-muted-foreground">Total de matrizes no rebanho</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Bezerros</CardTitle>
+            <GitCommitVertical className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{animalCounts.bezerros}</div>
+             <p className="text-xs text-muted-foreground">Total de machos jovens</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Bezerras</CardTitle>
+            <GitBranch className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{animalCounts.bezerras}</div>
+            <p className="text-xs text-muted-foreground">Total de fêmeas jovens</p>
+          </CardContent>
+        </Card>
       </div>
      
       {isClient && (
