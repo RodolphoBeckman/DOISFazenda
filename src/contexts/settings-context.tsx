@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { type Item, type Category } from '@/lib/data-schemas';
 
 interface Settings {
@@ -16,15 +16,34 @@ interface SettingsContextType {
   addSettingItem: (category: Category, item: Item) => void;
 }
 
+const SETTINGS_STORAGE_KEY = 'cattleLifeSettings';
+
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+const getInitialSettings = (): Settings => {
+  if (typeof window === 'undefined') {
+    return { lots: [], pastures: [], farms: [], breeds: [] };
+  }
+  try {
+    const item = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
+    return item ? JSON.parse(item) : { lots: [], pastures: [], farms: [], breeds: [] };
+  } catch (error) {
+    console.warn(`Error reading localStorage key “${SETTINGS_STORAGE_KEY}”:`, error);
+    return { lots: [], pastures: [], farms: [], breeds: [] };
+  }
+};
+
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [settings, setSettings] = useState<Settings>({
-    lots: [],
-    pastures: [],
-    farms: [],
-    breeds: [],
-  });
+  const [settings, setSettings] = useState<Settings>(getInitialSettings);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch (error) {
+       console.warn(`Error setting localStorage key “${SETTINGS_STORAGE_KEY}”:`, error);
+    }
+  }, [settings]);
+
 
   const addSettingItem = (category: Category, item: Item) => {
     setSettings((prevSettings) => ({
