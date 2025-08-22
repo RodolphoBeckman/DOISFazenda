@@ -199,8 +199,8 @@ export default function ImportPage() {
                if (typeof dateValue === 'string') {
                  const parts = dateValue.split(/[/.-]/);
                  if (parts.length === 3) {
-                    const year = parts[2].length === 4 ? parts[2] : parts[0];
-                    const day = parts[2].length === 4 ? parts[0] : parts[2];
+                    const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2]) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
+                    const day = parts[0];
                     const month = parts[1];
                     const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00`;
                     parsedDate = new Date(isoDateString);
@@ -227,6 +227,8 @@ export default function ImportPage() {
                     } else if (lowerSex.startsWith('m')) {
                         sexValue = 'Macho';
                     }
+               } else {
+                 sexValue = undefined;
                }
 
                const birthData = {
@@ -249,7 +251,7 @@ export default function ImportPage() {
                   }
               });
 
-              if (!birthData.cowId || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
+              if (!birthData.cowId || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
                   errorCount++;
                   continue;
               }
@@ -410,5 +412,3 @@ export default function ImportPage() {
     </main>
   );
 }
-
-    

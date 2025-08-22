@@ -247,15 +247,19 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
                 <TableRow key={index}>
                   <TableCell className="font-medium">{birth.cowId}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        birth.sex === 'Macho'
-                          ? 'secondary'
-                          : 'default'
-                      }
-                    >
-                      {birth.sex}
-                    </Badge>
+                    {birth.sex ? (
+                      <Badge
+                        variant={
+                          birth.sex === 'Macho'
+                            ? 'secondary'
+                            : 'default'
+                        }
+                      >
+                        {birth.sex}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
                   </TableCell>
                   <TableCell>{birth.breed}</TableCell>
                   <TableCell>{birth.sire}</TableCell>
@@ -277,5 +281,3 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
     </div>
   );
 }
-
-    
