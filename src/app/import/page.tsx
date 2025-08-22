@@ -127,7 +127,6 @@ export default function ImportPage() {
 
     const headers = previewData.headers.map(h => h ? String(h).trim() : "");
     
-    // Helper function to get value by checking multiple possible header names
     const getColumnValue = (rowObject: {[key: string]: any}, keys: string[]): any => {
         for (const key of keys) {
             if (rowObject.hasOwnProperty(key)) {
@@ -136,7 +135,6 @@ export default function ImportPage() {
         }
         return undefined;
     };
-
 
     let importedCount = 0;
     let errorCount = 0;
@@ -148,7 +146,6 @@ export default function ImportPage() {
 
         const rowData: { [key: string]: any } = {};
         headers.forEach((header, index) => {
-            // Use original header name for mapping
             rowData[header] = row[index];
         });
         
@@ -178,9 +175,8 @@ export default function ImportPage() {
                   continue;
               }
               
-              // Check for duplicates before adding
               if (cows.some(c => c.id.trim().toLowerCase() === cowData.id.trim().toLowerCase())) {
-                  continue; // Skip if cow with same ID already exists
+                  continue;
               }
 
               const newFarm = cowData.farm;
@@ -200,7 +196,7 @@ export default function ImportPage() {
                const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
                const birthData = {
                   cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
-                  date: dateValue ? new Date(dateValue) : undefined,
+                  date: dateValue,
                   sex: getColumnValue(rowData, ['Sexo do Bezerro']),
                   breed: getColumnValue(rowData, ['Raça do Bezerro']),
                   sire: getColumnValue(rowData, ['Nome do Pai']),
@@ -210,8 +206,8 @@ export default function ImportPage() {
                   observations: getColumnValue(rowData, ['Observações']),
                   obs1: getColumnValue(rowData, ['Obs: 1']),
                   jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
-              }
-
+              };
+               
               Object.keys(birthData).forEach(key => {
                   if (birthData[key as keyof typeof birthData] === null) {
                       (birthData as any)[key] = undefined;
@@ -221,11 +217,20 @@ export default function ImportPage() {
               if (!birthData.cowId || !birthData.date || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
                   continue;
               }
-              
-              // Check for duplicates before adding (e.g., same cowId on the same date)
-              if (births.some(b => b.cowId.trim().toLowerCase() === birthData.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === new Date(birthData.date!).toDateString())) {
-                continue; // Skip if birth for this cow on this date already exists
+
+               const parsedDate = new Date(birthData.date);
+               if (isNaN(parsedDate.getTime())) {
+                   continue;
+               }
+
+              if (births.some(b => b.cowId.trim().toLowerCase() === birthData.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === parsedDate.toDateString())) {
+                continue;
               }
+               
+              const validatedBirthData = {
+                ...birthData,
+                date: parsedDate,
+              };
 
               const newFarm = birthData.farm;
               if (newFarm && !settings.farms.some(f => f.name.trim().toLowerCase() === newFarm.trim().toLowerCase())) {
@@ -240,14 +245,12 @@ export default function ImportPage() {
                    addSettingItem('breeds', { id: crypto.randomUUID(), name: newBreed });
               }
 
-              const birth = BirthSchema.parse(birthData);
+              const birth = BirthSchema.parse(validatedBirthData);
               addBirth(birth);
               importedCount++;
           }
         } catch (e) {
             errorCount++;
-            // This will now only log errors for rows that are supposed to be valid, but still fail.
-            // Empty rows will be skipped silently.
             console.error('Validation Error on row:', rowData, e);
         }
     }
@@ -375,5 +378,3 @@ export default function ImportPage() {
     </main>
   );
 }
-
-    
