@@ -108,8 +108,8 @@ export default function BirthsPage() {
     if (birthToTransfer) {
       transferBirthToCow(birthToTransfer);
       toast({
-        title: "Bezerra Transferida!",
-        description: `A bezerra da vaca ${birthToTransfer.cowId} foi adicionada ao rebanho de vacas.`,
+        title: "Animal Transferido!",
+        description: `O animal da vaca ${birthToTransfer.cowId} foi adicionado ao rebanho principal.`,
       });
     }
     setIsTransferAlertOpen(false);
@@ -378,7 +378,7 @@ export default function BirthsPage() {
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta ação não pode ser desfeita. Isso excluirá permanentemente o registro de nascimento da vaca
-              <span className="font-bold"> Nº {birthToDelete?.cowId}</span> do dia {birthToDelete?.date?.toLocaleDateString('pt-BR')}.
+              <span className="font-bold"> Nº {birthToDelete?.cowId}</span> do dia {birthToDelete?.date ? new Date(birthToDelete.date).toLocaleDateString('pt-BR') : ''}.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -392,8 +392,8 @@ export default function BirthsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Transferência</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza de que deseja transferir a bezerra da vaca 
-              <span className="font-bold"> Nº {birthToTransfer?.cowId}</span> para o rebanho de vacas? Esta ação não pode ser desfeita.
+              Tem certeza de que deseja transferir o animal da vaca 
+              <span className="font-bold"> Nº {birthToTransfer?.cowId}</span> para o rebanho principal? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -495,8 +495,8 @@ function CardWithTable({ title, data, allData, renderFilterableHeader, onEditCli
                   <TableCell>{birth.location || '-'}</TableCell>
                    <TableCell className="text-right">
                     <div className="flex items-center justify-end">
-                      {birth.sex === 'Fêmea' && (
-                        <Button variant="ghost" size="icon" title="Transferir para Vacas" onClick={() => onTransferClick(birth)}>
+                      {(birth.sex === 'Fêmea' || birth.sex === 'Macho') && (
+                        <Button variant="ghost" size="icon" title="Transferir para Rebanho" onClick={() => onTransferClick(birth)}>
                             <Send className="h-4 w-4" />
                             <span className="sr-only">Transferir</span>
                         </Button>
@@ -523,3 +523,5 @@ function CardWithTable({ title, data, allData, renderFilterableHeader, onEditCli
     </div>
   );
 }
+
+    

@@ -140,12 +140,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setData(prevData => {
       if (!birth.id) return prevData;
 
-      // Crie um novo ID para o bezerro se necessário ou use um novo brinco
-      const newCowId = `FILHA DA ${birth.cowId}`;
+      const animalSexName = birth.sex === 'Macho' ? 'Bezerro' : 'Bezerra';
+      const newCowId = `${animalSexName.toUpperCase()} DA ${birth.cowId}`;
+      const animalName = `${animalSexName} de ${birth.cowId}`;
 
       const newCow: Cow = {
-        id: newCowId, // Este deve ser um novo brinco único
-        animal: "Bezerro", // Nome inicial
+        id: newCowId, 
+        animal: animalName,
         origem: "Nascimento",
         farm: birth.farm || '',
         lot: birth.lot || '',
@@ -227,3 +228,5 @@ export const useData = () => {
   }
   return context;
 };
+
+    
