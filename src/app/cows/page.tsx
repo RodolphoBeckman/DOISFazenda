@@ -33,6 +33,7 @@ import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PlusCircle, Search } from
 import { Input } from '@/components/ui/input';
 import { useData } from '@/contexts/data-context';
 import type { Cow } from '@/lib/data-schemas';
+import EditCowDialog from '@/components/edit-cow-dialog';
 
 
 type ColumnKey = keyof Cow;
@@ -48,10 +49,17 @@ export default function CowsPage() {
     id: '', animal: '', origem: '', farm: '', lot: '', location: '', status: '', registrationStatus: '', loteT: '', obs1: '', motivoDoDescarte: '', mes: '', ano: ''
   });
   const [isClient, setIsClient] = React.useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [selectedCow, setSelectedCow] = React.useState<Cow | null>(null);
 
   React.useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleRowClick = (cow: Cow) => {
+    setSelectedCow(cow);
+    setIsEditDialogOpen(true);
+  };
 
 
   const handleFilterChange = (column: ColumnKey, value: string) => {
@@ -215,7 +223,7 @@ export default function CowsPage() {
         </TabsList>
 
         <TabsContent value="all">
-          <CardWithTable title="Todas as Vacas" data={getFilteredAndSortedData(allCows)} renderFilterableHeader={renderFilterableHeader}/>
+          <CardWithTable title="Todas as Vacas" data={getFilteredAndSortedData(allCows)} renderFilterableHeader={renderFilterableHeader} onRowClick={handleRowClick}/>
         </TabsContent>
         {statuses.map(status => (
             <TabsContent key={status} value={status.toLowerCase().replace(' ', '-')}>
@@ -223,16 +231,22 @@ export default function CowsPage() {
                     title={`Vacas ${status}`}
                     data={getFilteredAndSortedData(allCows.filter((c) => c.status === status))}
                     renderFilterableHeader={renderFilterableHeader}
+                    onRowClick={handleRowClick}
                 />
             </TabsContent>
         ))}
       </Tabs>
       )}
+       <EditCowDialog
+        cow={selectedCow}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+      />
     </main>
   );
 }
 
-function CardWithTable({ title, data, renderFilterableHeader }: { title: string; data: Cow[], renderFilterableHeader: (column: ColumnKey, label: string) => React.ReactNode }) {
+function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { title: string; data: Cow[], renderFilterableHeader: (column: ColumnKey, label: string) => React.ReactNode, onRowClick: (cow: Cow) => void }) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
       <div className="p-6">
@@ -250,11 +264,16 @@ function CardWithTable({ title, data, renderFilterableHeader }: { title: string;
                 {renderFilterableHeader('lot', 'Lote')}
                 {renderFilterableHeader('location', 'Localização')}
                 {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
+                {renderFilterableHeader('loteT', 'Lote T.')}
+                {renderFilterableHeader('obs1', 'Obs: 1')}
+                {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
+                {renderFilterableHeader('mes', 'Mês')}
+                {renderFilterableHeader('ano', 'Ano')}
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map((cow, index) => (
-                <TableRow key={`${cow.id}-${index}`}>
+                <TableRow key={`${cow.id}-${index}`} onClick={() => onRowClick(cow)} className="cursor-pointer">
                   <TableCell className="font-medium">{cow.id}</TableCell>
                   <TableCell>{cow.animal}</TableCell>
                   <TableCell>{cow.origem}</TableCell>
@@ -273,6 +292,11 @@ function CardWithTable({ title, data, renderFilterableHeader }: { title: string;
                       {cow.registrationStatus}
                     </Badge>
                   </TableCell>
+                  <TableCell>{cow.loteT || '-'}</TableCell>
+                  <TableCell>{cow.obs1 || '-'}</TableCell>
+                  <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
+                  <TableCell>{cow.mes || '-'}</TableCell>
+                  <TableCell>{cow.ano || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
