@@ -171,16 +171,16 @@ export default function ImportPage() {
               importedCount++;
 
           } else if (importType === 'nascimentos') {
-              const birthData = {
-                  cowId: String(rowData['brinco nº (mãe)'] || rowData['brinco mae'] || ''),
-                  date: rowData['data de nascimento'] ? new Date(rowData['data de nascimento']) : undefined,
-                  sex: String(rowData['sexo do bezerro'] || ''),
-                  breed: String(rowData['raça do bezerro'] || rowData['raça'] || ''),
+               const birthData = {
+                  cowId: String(rowData['brinco nº'] || rowData['brinco'] || ''),
+                  date: rowData['data nascim'] || rowData['data de nascimento'] ? new Date(rowData['data nascim'] || rowData['data de nascimento']) : undefined,
+                  sex: String(rowData['sexo do bezerr'] || rowData['sexo do bezerro'] || ''),
+                  breed: String(rowData['raça do bezerr'] || rowData['raça do bezerro'] || rowData['raça'] || ''),
                   sire: String(rowData['nome do pai'] || ''),
                   lot: String(rowData['lote'] || ''),
                   farm: String(rowData['fazenda'] || ''),
                   location: String(rowData['localização'] || ''),
-                  observations: String(rowData['observações'] || ''),
+                  observations: String(rowData['obs: 1'] || rowData['observações'] || ''),
               }
 
               if (!birthData.cowId || !birthData.date || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
