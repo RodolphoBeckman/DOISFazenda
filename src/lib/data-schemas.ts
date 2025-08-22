@@ -26,14 +26,15 @@ export const BirthSchema = z.object({
   cowId: z.string({ required_error: "Selecione a vaca." }),
   date: z.date({ required_error: "A data de nascimento é obrigatória." }).optional(),
   sex: z.enum(["Macho", "Fêmea", "Aborto", "Não Definido"]).optional(),
-  breed: z.string().optional(),
+  breed: z.string().min(1, 'A raça é obrigatória.'),
   sire: z.string().optional(),
-  lot: z.string().optional(),
-  farm: z.string().optional(),
-  location: z.string().optional(),
+  lot: z.string().min(1, 'O lote é obrigatório.'),
+  farm: z.string().min(1, 'A fazenda é obrigatória.'),
+  location: z.string().min(1, 'A localização é obrigatória.'),
   observations: z.string().optional(),
   obs1: z.string().optional(),
   jvvo: z.string().optional(),
+  animal: z.string().optional(),
 });
 export type Birth = z.infer<typeof BirthSchema>;
 

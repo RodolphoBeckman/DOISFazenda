@@ -58,6 +58,7 @@ export default function NewBirthPage() {
       observations: "",
       obs1: "",
       jvvo: "",
+      animal: ""
     },
   });
 
@@ -172,6 +173,19 @@ export default function NewBirthPage() {
                         <SelectItem value="Não Definido">Não Definido</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="animal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Animal</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Bezerro de 2" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

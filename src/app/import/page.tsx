@@ -144,7 +144,7 @@ export default function ImportPage() {
         for (const key of keys) {
             const normalizedKey = key.toLowerCase();
             const foundKey = Object.keys(rowObject).find(rowKey => rowKey.trim().toLowerCase() === normalizedKey);
-            if (foundKey && rowObject[foundKey] !== undefined && rowObject[foundKey] !== null) {
+            if (foundKey && rowObject[foundKey] !== undefined && rowObject[foundKey] !== null && String(rowObject[foundKey]).trim() !== '') {
                 return rowObject[foundKey];
             }
         }
@@ -170,8 +170,14 @@ export default function ImportPage() {
         
         try {
           if (importType === 'vacas') {
+              const cowId = getColumnValue(rowData, ['Brinco Nº']);
+              if (!cowId) {
+                  errorCount++;
+                  continue; 
+              }
+
               const cowData: any = {
-                  id: String(getColumnValue(rowData, ['Brinco Nº']) ?? ''),
+                  id: String(cowId),
                   animal: getColumnValue(rowData, ['Animal']),
                   origem: getColumnValue(rowData, ['Origem']),
                   farm: getColumnValue(rowData, ['Fazenda']),
@@ -186,7 +192,7 @@ export default function ImportPage() {
                   ano: getColumnValue(rowData, ['Ano']),
               };
               
-              if (!cowData.id || !cowData.animal) {
+              if (!cowData.animal) {
                   errorCount++;
                   continue;
               }
@@ -216,24 +222,29 @@ export default function ImportPage() {
 
           } else if (importType === 'nascimentos') {
                const rawCowId = getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº']);
+               const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim', 'Data Nasc']);
                
                if (!rawCowId) {
+                  errorCount++;
                   continue; 
                }
                
-               const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
                let parsedDate;
                if (dateValue) {
                  if (typeof dateValue === 'number') {
-                    const excelEpoch = new Date(1899, 11, 30);
+                    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
                     parsedDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
                  } else if (typeof dateValue === 'string') {
                      const parts = dateValue.split(/[/.-]/);
                      if (parts.length === 3) {
-                        const day = parts[0];
-                        const month = parts[1];
-                        const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2], 10) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
-                        const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
+                        let day, month, year;
+                        if (parts[1].length === 2 && parseInt(parts[1], 10) > 12) { // DD/MM/YYYY vs MM/DD/YYYY heuristic
+                          day = parts[1]; month = parts[0]; year = parts[2];
+                        } else {
+                          day = parts[0]; month = parts[1]; year = parts[2];
+                        }
+                        const fullYear = year.length === 4 ? year : (parseInt(year, 10) > 50 ? `19${year}`: `20${year}`);
+                        const isoDateString = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
                         parsedDate = new Date(isoDateString);
                      } else {
                         parsedDate = new Date(dateValue);
@@ -276,6 +287,7 @@ export default function ImportPage() {
                   observations: getColumnValue(rowData, ['Observações']),
                   obs1: getColumnValue(rowData, ['Obs: 1']),
                   jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
+                  animal: getColumnValue(rowData, ['Animal']),
               };
                
               Object.keys(birthData).forEach(key => {
@@ -308,7 +320,7 @@ export default function ImportPage() {
           }
         } catch (e) {
             errorCount++;
-            // console.error('Validation Error on row:', rowData, e);
+            console.error('Validation Error on row:', rowData, e);
         }
     }
     
