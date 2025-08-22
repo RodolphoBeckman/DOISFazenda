@@ -112,7 +112,8 @@ export default function CowsPage() {
     setFilters(prev => ({ ...prev, [column]: [] }));
   };
 
-  const selectAll = (column: ColumnKey, allValues: string[]) => {
+  const selectAll = (column: ColumnKey, allValues: (string | undefined)[]) => {
+    // @ts-ignore
     setFilters(prev => ({ ...prev, [column]: allValues.map(v => String(v)) }));
   }
 
@@ -162,7 +163,6 @@ export default function CowsPage() {
                         if (filters[column].length === allUniqueValuesForSelectAll.length) {
                             clearFilter(column);
                         } else {
-                            // @ts-ignore
                             selectAll(column, allUniqueValuesForSelectAll);
                         }
                     }}
@@ -173,10 +173,8 @@ export default function CowsPage() {
                 <div className="max-h-40 overflow-y-auto">
                     {uniqueValues.map(value => (
                         <DropdownMenuCheckboxItem
-                        // @ts-ignore
-                        key={value}
-                        // @ts-ignore
-                        checked={filters[column].includes(value)}
+                        key={String(value)}
+                        checked={filters[column].includes(String(value))}
                         onCheckedChange={() => handleFilterChange(column, String(value))}
                         >
                         {String(value) || '(Vazio)'}
@@ -189,7 +187,8 @@ export default function CowsPage() {
     );
   }
 
-  const statuses = Array.from(new Set(allCows.map(cow => cow.status)));
+  const statuses = Array.from(new Set(allCows.map(cow => cow.status))).filter(Boolean) as string[];
+
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -244,13 +243,17 @@ function CardWithTable({ title, data, renderFilterableHeader }: { title: string;
           <Table>
             <TableHeader>
               <TableRow>
-                {renderFilterableHeader('id', 'Brinco')}
+                {renderFilterableHeader('id', 'Brinco Nº')}
                 {renderFilterableHeader('animal', 'Animal')}
+                {renderFilterableHeader('loteT', 'Lote T.')}
                 {renderFilterableHeader('origem', 'Origem')}
-                {renderFilterableHeader('farm', 'Fazenda')}
-                {renderFilterableHeader('lot', 'Lote')}
-                {renderFilterableHeader('location', 'Localização')}
                 {renderFilterableHeader('status', 'Status')}
+                {renderFilterableHeader('obs1', 'Obs: 1')}
+                {renderFilterableHeader('farm', 'Fazenda')}
+                {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
+                {renderFilterableHeader('mes', 'Mês')}
+                {renderFilterableHeader('ano', 'Ano')}
+                {renderFilterableHeader('location', 'Localização')}
                 {renderFilterableHeader('registrationStatus', 'Status Cadastro')}
               </TableRow>
             </TableHeader>
@@ -259,10 +262,8 @@ function CardWithTable({ title, data, renderFilterableHeader }: { title: string;
                 <TableRow key={cow.id}>
                   <TableCell className="font-medium">{cow.id}</TableCell>
                   <TableCell>{cow.animal}</TableCell>
+                  <TableCell>{cow.loteT}</TableCell>
                   <TableCell>{cow.origem}</TableCell>
-                  <TableCell>{cow.farm}</TableCell>
-                  <TableCell>{cow.lot}</TableCell>
-                  <TableCell>{cow.location}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -276,6 +277,12 @@ function CardWithTable({ title, data, renderFilterableHeader }: { title: string;
                       {cow.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>{cow.obs1}</TableCell>
+                  <TableCell>{cow.farm}</TableCell>
+                  <TableCell>{cow.motivoDoDescarte}</TableCell>
+                  <TableCell>{cow.mes}</TableCell>
+                  <TableCell>{cow.ano}</TableCell>
+                  <TableCell>{cow.location}</TableCell>
                   <TableCell>
                    <Badge
                       variant={
