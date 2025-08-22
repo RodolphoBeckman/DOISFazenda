@@ -250,7 +250,9 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
                     {birth.sex ? (
                       <Badge
                         variant={
-                          birth.sex === 'Macho'
+                           birth.sex === 'Aborto'
+                            ? 'destructive'
+                            : birth.sex === 'Macho'
                             ? 'secondary'
                             : 'default'
                         }

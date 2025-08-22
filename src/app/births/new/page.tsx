@@ -168,6 +168,7 @@ export default function NewBirthPage() {
                       <SelectContent>
                         <SelectItem value="Macho">Macho</SelectItem>
                         <SelectItem value="Fêmea">Fêmea</SelectItem>
+                        <SelectItem value="Aborto">Aborto</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

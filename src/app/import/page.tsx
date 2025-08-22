@@ -226,6 +226,8 @@ export default function ImportPage() {
                         sexValue = 'Fêmea';
                     } else if (lowerSex.startsWith('m')) {
                         sexValue = 'Macho';
+                    } else if (lowerSex.startsWith('a')) {
+                        sexValue = 'Aborto';
                     }
                } else {
                  sexValue = undefined;
