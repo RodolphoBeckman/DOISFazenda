@@ -12,19 +12,29 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { useData } from '@/contexts/data-context';
+import { useSettings } from '@/contexts/settings-context';
+import { CowSchema, BirthSchema } from '@/lib/data-schemas';
 
 type ParsedData = {
   headers: string[];
   rows: (string | number | null)[][];
 };
 
+type FullParsedData = (string | number | null)[][];
+
+
 export default function ImportPage() {
   const { toast } = useToast();
+  const { addCow, addBirth } = useData();
+  const { settings, addSettingItem } = useSettings();
+  
   const [file, setFile] = useState<File | null>(null);
   const [importType, setImportType] = useState<string>("");
   const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
   const [isLoadingImport, setIsLoadingImport] = useState<boolean>(false);
   const [previewData, setPreviewData] = useState<ParsedData>({ headers: [], rows: [] });
+  const [fullData, setFullData] = useState<FullParsedData>([]);
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,6 +44,7 @@ export default function ImportPage() {
             setFile(selectedFile);
             setShowPreview(false);
             setPreviewData({ headers: [], rows: [] });
+            setFullData([]);
         } else {
             toast({
                 variant: 'destructive',
@@ -45,23 +56,24 @@ export default function ImportPage() {
     }
   };
 
-  const parseFile = (file: File): Promise<ParsedData> => {
+  const parseFile = (file: File): Promise<{ preview: ParsedData; full: FullParsedData }> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
-          const workbook = xlsx.read(data, { type: 'array' });
+          const workbook = xlsx.read(data, { type: 'array', cellDates: true });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: null }) as (string | number | null)[][];
           
           if (jsonData.length > 0) {
             const headers = jsonData[0] as string[];
-            const rows = jsonData.slice(1, 4); // Preview first 3 data rows
-            resolve({ headers, rows });
+            const previewRows = jsonData.slice(1, 4); // Preview first 3 data rows
+            const fullRows = jsonData.slice(1);
+            resolve({ preview: { headers, rows: previewRows }, full: fullRows });
           } else {
-            resolve({ headers: [], rows: [] });
+            resolve({ preview: { headers: [], rows: [] }, full: [] });
           }
         } catch (error) {
           reject(error);
@@ -86,8 +98,9 @@ export default function ImportPage() {
     setShowPreview(true);
 
     try {
-      const parsed = await parseFile(file);
-      setPreviewData(parsed);
+      const { preview, full } = await parseFile(file);
+      setPreviewData(preview);
+      setFullData(full);
     } catch (error) {
       console.error("File parsing error:", error);
       toast({
@@ -101,8 +114,8 @@ export default function ImportPage() {
     }
   };
 
-  const handleImport = () => {
-    if (!showPreview || previewData.rows.length === 0) {
+  const handleImport = async () => {
+    if (!showPreview || fullData.length === 0) {
       toast({
         variant: 'destructive',
         title: 'Pré-visualização necessária',
@@ -111,27 +124,90 @@ export default function ImportPage() {
       return;
     }
     setIsLoadingImport(true);
-    console.log("Importing data for:", importType);
-    console.log("Headers:", previewData.headers);
-    console.log("All file rows would be processed here...");
+
+    const headers = previewData.headers.map(h => h.toLowerCase().trim());
     
-    // Simulate API call
-    setTimeout(() => {
-        setIsLoadingImport(false);
-        toast({
-            title: 'Importação Concluída!',
-            description: `Os dados de ${importType} foram importados com sucesso.`,
+    let importedCount = 0;
+    let errorCount = 0;
+
+    for (const row of fullData) {
+        const rowData: { [key: string]: any } = {};
+        headers.forEach((header, index) => {
+            rowData[header] = row[index];
         });
         
-        // Reset state after import
-        setFile(null);
-        setImportType("");
-        setShowPreview(false);
-        setPreviewData({ headers: [], rows: [] });
-        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-        if(fileInput) fileInput.value = '';
+        try {
+            // Auto-add settings
+            const newFarm = rowData['fazenda'];
+            if (newFarm && !settings.farms.some(f => f.name === newFarm)) {
+                addSettingItem('farms', { id: crypto.randomUUID(), name: newFarm });
+            }
+            const newLot = rowData['lote'];
+            if (newLot && !settings.lots.some(l => l.name === newLot)) {
+                addSettingItem('lots', { id: crypto.randomUUID(), name: newLot });
+            }
+            const newBreed = rowData['raça'] || rowData['raça do bezerro'];
+            if (newBreed && !settings.breeds.some(b => b.name === newBreed)) {
+                 addSettingItem('breeds', { id: crypto.randomUUID(), name: newBreed });
+            }
 
-    }, 1500);
+            if (importType === 'vacas') {
+                const cow = CowSchema.parse({
+                    id: String(rowData['brinco nº'] || rowData['brinco']),
+                    animal: String(rowData['animal']),
+                    origem: String(rowData['origem']),
+                    farm: String(rowData['fazenda']),
+                    lot: String(rowData['lote']),
+                    location: String(rowData['localização']),
+                    status: String(rowData['status']),
+                    registrationStatus: String(rowData['status do cadastro'] || 'Ativo'),
+                });
+                addCow(cow);
+                importedCount++;
+            } else if (importType === 'nascimentos') {
+                const birth = BirthSchema.parse({
+                    cowId: String(rowData['brinco nº (mãe)'] || rowData['brinco mae']),
+                    date: new Date(rowData['data de nascimento']),
+                    sex: String(rowData['sexo do bezerro']),
+                    breed: String(rowData['raça do bezerro']),
+                    sire: String(rowData['nome do pai']),
+                    lot: String(rowData['lote']),
+                    farm: String(rowData['fazenda']),
+                    location: String(rowData['localização']),
+                    observations: String(rowData['observações'] || ''),
+                });
+                addBirth(birth);
+                importedCount++;
+            }
+        } catch (e) {
+            errorCount++;
+            console.error('Validation Error on row:', rowData, e);
+        }
+    }
+
+    setIsLoadingImport(false);
+    
+    if (importedCount > 0) {
+        toast({
+            title: 'Importação Concluída!',
+            description: `${importedCount} registros importados com sucesso. ${errorCount > 0 ? `${errorCount} registros com erro.` : ''}`,
+        });
+    } else {
+         toast({
+            variant: 'destructive',
+            title: 'Nenhum registro importado.',
+            description: `Verifique se as colunas do arquivo correspondem ao esperado. ${errorCount} registros com erro.`,
+        });
+    }
+
+    // Reset state
+    setFile(null);
+    setImportType("");
+    setShowPreview(false);
+    setPreviewData({ headers: [], rows: [] });
+    setFullData([]);
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    if(fileInput) fileInput.value = '';
   };
 
   return (
@@ -180,7 +256,7 @@ export default function ImportPage() {
                 {isLoadingPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
                 Pré-visualizar
             </Button>
-            <Button onClick={handleImport} disabled={!showPreview || previewData.rows.length === 0 || isLoadingImport || isLoadingPreview}>
+            <Button onClick={handleImport} disabled={!showPreview || fullData.length === 0 || isLoadingImport || isLoadingPreview}>
             {isLoadingImport ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
