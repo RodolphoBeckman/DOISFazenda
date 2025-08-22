@@ -1,32 +1,35 @@
 
 "use client"
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltipContent,
+  ChartLegendContent
 } from "@/components/ui/chart"
 
-
-const chartData: { sex: string, count: number, fill: string }[] = [];
 
 const chartConfig = {
   count: {
     label: "Contagem",
   },
-  male: {
+  Macho: {
     label: "Macho",
     color: "hsl(var(--chart-2))",
   },
-  female: {
+  Fêmea: {
     label: "Fêmea",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
 
-export function BirthsBySexChart() {
-    if (chartData.length === 0) {
+interface BirthsBySexChartProps {
+  data: { sex: string; count: number; fill: string }[];
+}
+
+export function BirthsBySexChart({ data }: BirthsBySexChartProps) {
+    if (!data || data.every(d => d.count === 0)) {
     return (
       <div className="flex items-center justify-center h-[250px] text-muted-foreground">
         Nenhum dado para exibir.
@@ -37,7 +40,7 @@ export function BirthsBySexChart() {
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
       <ResponsiveContainer>
-        <BarChart data={chartData} layout="vertical" accessibilityLayer>
+        <BarChart data={data} layout="vertical" accessibilityLayer>
            <YAxis
             dataKey="sex"
             type="category"
@@ -49,11 +52,10 @@ export function BirthsBySexChart() {
           />
           <XAxis type="number" hide />
           <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+           <Legend content={<ChartLegendContent />} />
           <Bar dataKey="count" radius={5} />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
   )
 }
-
-    

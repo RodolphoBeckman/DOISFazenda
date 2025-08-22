@@ -1,5 +1,9 @@
+
+"use client";
+
 import { Baby, Beaker, CalendarClock, PlusCircle, Users } from "lucide-react";
 import Link from "next/link";
+import { useData } from "@/contexts/data-context";
 import {
   Card,
   CardContent,
@@ -11,8 +15,67 @@ import { Button } from "@/components/ui/button";
 import { CalvingPredictionCard } from "@/components/calving-prediction-card";
 import { BirthsByFarmChart } from "@/components/charts/births-by-farm-chart";
 import { BirthsBySexChart } from "@/components/charts/births-by-sex-chart";
+import { useMemo } from "react";
+import { format, isSameYear } from "date-fns";
 
 export default function Dashboard() {
+  const { data: cows, births, iatfs } = useData();
+
+  const dashboardData = useMemo(() => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+
+    const birthsThisYear = births.filter(
+      (b) => b.date && isSameYear(b.date, today)
+    );
+
+    const checkedIatfs = iatfs.filter((i) => i.result === "Prenha" || i.result === "Vazia");
+    const pregnantIatfs = checkedIatfs.filter((i) => i.result === "Prenha");
+    const pregnancyRate = checkedIatfs.length > 0 ? (pregnantIatfs.length / checkedIatfs.length) * 100 : 0;
+    
+    const activeCows = cows.filter(c => c.registrationStatus === 'Ativo');
+
+    const nextCalving = iatfs
+      .filter((i) => i.result === "Prenha" && i.inseminationDate)
+      .map((i) => {
+        const calvingDate = new Date(i.inseminationDate!);
+        calvingDate.setDate(calvingDate.getDate() + 283);
+        return calvingDate;
+      })
+      .filter((date) => date >= today)
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+
+    const birthsBySex = births
+      .filter(b => b.sex === 'Macho' || b.sex === 'Fêmea')
+      .reduce((acc, birth) => {
+        const sex = birth.sex!;
+        acc[sex] = (acc[sex] || 0) + 1;
+        return acc;
+      }, {} as Record<"Macho" | "Fêmea", number>);
+
+     const birthsByFarm = births.reduce((acc, birth) => {
+      const farm = birth.farm || "Não informada";
+      acc[farm] = (acc[farm] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      birthsThisYear: birthsThisYear.length,
+      pregnancyRate: pregnancyRate.toFixed(0),
+      totalCows: activeCows.length,
+      nextCalvingDate: nextCalving,
+      birthsBySexData: [
+        { sex: "Macho", count: birthsBySex.Macho || 0, fill: "hsl(var(--chart-2))" },
+        { sex: "Fêmea", count: birthsBySex.Fêmea || 0, fill: "hsl(var(--primary))" },
+      ],
+      birthsByFarmData: Object.entries(birthsByFarm).map(([farm, count], index) => ({
+        farm,
+        births: count,
+        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
+      })),
+    };
+  }, [cows, births, iatfs]);
+
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -46,9 +109,11 @@ export default function Dashboard() {
             <Baby className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{dashboardData.birthsThisYear}</div>
             <p className="text-xs text-muted-foreground">
-              Nenhum nascimento registrado ainda
+              {dashboardData.birthsThisYear > 0
+                ? `${dashboardData.birthsThisYear} nascimento(s) em ${new Date().getFullYear()}`
+                : "Nenhum nascimento registrado ainda"}
             </p>
           </CardContent>
         </Card>
@@ -58,7 +123,7 @@ export default function Dashboard() {
             <Beaker className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0%</div>
+            <div className="text-2xl font-bold">{dashboardData.pregnancyRate}%</div>
             <p className="text-xs text-muted-foreground">
               Baseado em IATFs checadas
             </p>
@@ -70,8 +135,12 @@ export default function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Nenhuma vaca registrada</p>
+            <div className="text-2xl font-bold">{dashboardData.totalCows}</div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardData.totalCows > 0
+                ? `${dashboardData.totalCows} animais ativos no rebanho`
+                : "Nenhuma vaca registrada"}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -80,9 +149,15 @@ export default function Dashboard() {
             <CalendarClock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
+            <div className="text-2xl font-bold">
+               {dashboardData.nextCalvingDate
+                ? format(dashboardData.nextCalvingDate, "dd/MM/yyyy")
+                : "-"}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Nenhuma previsão disponível
+              {dashboardData.nextCalvingDate
+                ? "Data de parto mais próxima"
+                : "Nenhuma previsão disponível"}
             </p>
           </CardContent>
         </Card>
@@ -97,7 +172,7 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <BirthsByFarmChart />
+            <BirthsByFarmChart data={dashboardData.birthsByFarmData} />
           </CardContent>
         </Card>
         <div className="col-span-4 lg:col-span-3 flex flex-col gap-4">
@@ -110,7 +185,7 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <BirthsBySexChart />
+              <BirthsBySexChart data={dashboardData.birthsBySexData} />
             </CardContent>
           </Card>
         </div>
@@ -118,5 +193,3 @@ export default function Dashboard() {
     </main>
   );
 }
-
-    

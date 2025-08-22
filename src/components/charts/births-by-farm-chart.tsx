@@ -8,28 +8,38 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-const chartData: { farm: string, births: number, fill: string }[] = [];
-
 const chartConfig = {
   births: {
     label: "Nascimentos",
   },
-  // Colors can be dynamically assigned or predefined
 } satisfies ChartConfig
 
-export function BirthsByFarmChart() {
-  if (chartData.length === 0) {
+interface BirthsByFarmChartProps {
+  data: { farm: string; births: number; fill: string }[];
+}
+
+
+export function BirthsByFarmChart({ data }: BirthsByFarmChartProps) {
+  if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-[250px] text-muted-foreground">
         Nenhum dado de nascimento para exibir.
       </div>
     )
   }
+  
+  const dynamicChartConfig = data.reduce((acc, item) => {
+    acc[item.farm] = {
+      label: item.farm,
+      color: item.fill
+    };
+    return acc;
+  }, {} as ChartConfig);
 
   return (
-    <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+    <ChartContainer config={{...chartConfig, ...dynamicChartConfig}} className="min-h-[200px] w-full">
       <ResponsiveContainer>
-        <BarChart data={chartData} accessibilityLayer>
+        <BarChart data={data} accessibilityLayer>
           <XAxis
             dataKey="farm"
             tickLine={false}
@@ -42,6 +52,7 @@ export function BirthsByFarmChart() {
             axisLine={false}
             fontSize={12}
             tickFormatter={(value) => `${value}`}
+            allowDecimals={false}
           />
           <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
           <Bar dataKey="births" radius={4} />
@@ -50,5 +61,3 @@ export function BirthsByFarmChart() {
     </ChartContainer>
   )
 }
-
-    
