@@ -14,6 +14,7 @@ interface DataContextType {
   births: Birth[];
   addCow: (cow: Cow) => void;
   updateCow: (id: string, updatedCow: Cow) => void;
+  updateCowsLot: (ids: string[], newLot: string) => void;
   addBirth: (birth: Birth) => void;
 }
 
@@ -59,6 +60,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       cows: prevData.cows.map(cow => cow.id === id ? updatedCow : cow),
     }));
   }
+
+  const updateCowsLot = (ids: string[], newLot: string) => {
+    setData((prevData) => ({
+      ...prevData,
+      cows: prevData.cows.map(cow => 
+        ids.includes(cow.id) ? { ...cow, lot: newLot } : cow
+      ),
+    }));
+  };
   
   const addBirth = (birth: Birth) => {
     setData((prevData) => ({
@@ -68,7 +78,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <DataContext.Provider value={{ data: data.cows, births: data.births, addCow, updateCow, addBirth }}>
+    <DataContext.Provider value={{ data: data.cows, births: data.births, addCow, updateCow, updateCowsLot, addBirth }}>
       {children}
     </DataContext.Provider>
   );
@@ -81,3 +91,5 @@ export const useData = () => {
   }
   return context;
 };
+
+    

@@ -29,11 +29,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PlusCircle, Search } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import { useData } from '@/contexts/data-context';
 import type { Cow } from '@/lib/data-schemas';
 import EditCowDialog from '@/components/edit-cow-dialog';
+import BulkUpdateLotDialog from '@/components/bulk-update-lot-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 type ColumnKey = keyof Cow;
@@ -50,7 +52,10 @@ export default function CowsPage() {
   });
   const [isClient, setIsClient] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = React.useState(false);
   const [selectedCow, setSelectedCow] = React.useState<Cow | null>(null);
+  const [selectedCows, setSelectedCows] = React.useState<string[]>([]);
+
 
   React.useEffect(() => {
     setIsClient(true);
@@ -59,6 +64,22 @@ export default function CowsPage() {
   const handleRowClick = (cow: Cow) => {
     setSelectedCow(cow);
     setIsEditDialogOpen(true);
+  };
+
+  const handleSelectCow = (cowId: string) => {
+    setSelectedCows(prev =>
+      prev.includes(cowId)
+        ? prev.filter(id => id !== cowId)
+        : [...prev, cowId]
+    );
+  };
+
+  const handleSelectAllCows = (filteredData: Cow[]) => {
+    if (selectedCows.length === filteredData.length) {
+      setSelectedCows([]);
+    } else {
+      setSelectedCows(filteredData.map(cow => cow.id));
+    }
   };
 
 
@@ -197,6 +218,8 @@ export default function CowsPage() {
 
   const statuses = Array.from(new Set(allCows.map(cow => cow.status))).filter(Boolean) as string[];
 
+  const filteredData = getFilteredAndSortedData(allCows);
+
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -204,12 +227,18 @@ export default function CowsPage() {
          <h1 className="text-3xl font-bold tracking-tight font-headline">
             Gerenciar Vacas
         </h1>
-        <Button asChild>
-            <Link href="/cows/new">
-              <PlusCircle /> 
-              <span>Nova Vaca</span>
-            </Link>
-          </Button>
+        <div className="flex items-center gap-2">
+            <Button onClick={() => setIsBulkUpdateDialogOpen(true)} disabled={selectedCows.length === 0}>
+                <PencilRuler />
+                <span>Alterar Lote em Massa ({selectedCows.length})</span>
+            </Button>
+            <Button asChild>
+                <Link href="/cows/new">
+                <PlusCircle /> 
+                <span>Nova Vaca</span>
+                </Link>
+            </Button>
+        </div>
       </div>
      
       {isClient && (
@@ -223,18 +252,32 @@ export default function CowsPage() {
         </TabsList>
 
         <TabsContent value="all">
-          <CardWithTable title="Todas as Vacas" data={getFilteredAndSortedData(allCows)} renderFilterableHeader={renderFilterableHeader} onRowClick={handleRowClick}/>
+          <CardWithTable 
+            title="Todas as Vacas" 
+            data={filteredData} 
+            renderFilterableHeader={renderFilterableHeader} 
+            onRowClick={handleRowClick}
+            selectedCows={selectedCows}
+            onSelectCow={handleSelectCow}
+            onSelectAllCows={() => handleSelectAllCows(filteredData)}
+          />
         </TabsContent>
-        {statuses.map(status => (
-            <TabsContent key={status} value={status.toLowerCase().replace(' ', '-')}>
-                <CardWithTable
-                    title={`Vacas ${status}`}
-                    data={getFilteredAndSortedData(allCows.filter((c) => c.status === status))}
-                    renderFilterableHeader={renderFilterableHeader}
-                    onRowClick={handleRowClick}
-                />
-            </TabsContent>
-        ))}
+        {statuses.map(status => {
+            const statusFilteredData = getFilteredAndSortedData(allCows.filter((c) => c.status === status));
+            return (
+                <TabsContent key={status} value={status.toLowerCase().replace(' ', '-')}>
+                    <CardWithTable
+                        title={`Vacas ${status}`}
+                        data={statusFilteredData}
+                        renderFilterableHeader={renderFilterableHeader}
+                        onRowClick={handleRowClick}
+                        selectedCows={selectedCows}
+                        onSelectCow={handleSelectCow}
+                        onSelectAllCows={() => handleSelectAllCows(statusFilteredData)}
+                    />
+                </TabsContent>
+            )
+        })}
       </Tabs>
       )}
        <EditCowDialog
@@ -242,11 +285,27 @@ export default function CowsPage() {
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
       />
+      <BulkUpdateLotDialog
+        isOpen={isBulkUpdateDialogOpen}
+        onClose={() => setIsBulkUpdateDialogOpen(false)}
+        cowIds={selectedCows}
+        onSuccess={() => setSelectedCows([])}
+      />
     </main>
   );
 }
 
-function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { title: string; data: Cow[], renderFilterableHeader: (column: ColumnKey, label: string) => React.ReactNode, onRowClick: (cow: Cow) => void }) {
+interface CardWithTableProps {
+    title: string;
+    data: Cow[];
+    renderFilterableHeader: (column: ColumnKey, label: string) => React.ReactNode;
+    onRowClick: (cow: Cow) => void;
+    selectedCows: string[];
+    onSelectCow: (cowId: string) => void;
+    onSelectAllCows: () => void;
+}
+
+function CardWithTable({ title, data, renderFilterableHeader, onRowClick, selectedCows, onSelectCow, onSelectAllCows }: CardWithTableProps) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
       <div className="p-6">
@@ -257,6 +316,13 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { ti
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">
+                    <Checkbox
+                        checked={data.length > 0 && selectedCows.length === data.length}
+                        onCheckedChange={onSelectAllCows}
+                        aria-label="Selecionar todas as linhas"
+                    />
+                </TableHead>
                 {renderFilterableHeader('id', 'Brinco Nº')}
                 {renderFilterableHeader('animal', 'Animal')}
                 {renderFilterableHeader('origem', 'Origem')}
@@ -268,11 +334,19 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { ti
                 {renderFilterableHeader('mes', 'Mês')}
                 {renderFilterableHeader('ano', 'Ano')}
                 {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
+                <TableHead className="w-[50px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map((cow, index) => (
-                <TableRow key={`${cow.id}-${index}`} onClick={() => onRowClick(cow)} className="cursor-pointer">
+                <TableRow key={`${cow.id}-${index}`} data-state={selectedCows.includes(cow.id) ? "selected" : ""}>
+                  <TableCell>
+                      <Checkbox
+                          checked={selectedCows.includes(cow.id)}
+                          onCheckedChange={() => onSelectCow(cow.id)}
+                          aria-label={`Selecionar linha ${index + 1}`}
+                      />
+                  </TableCell>
                   <TableCell className="font-medium">{cow.id}</TableCell>
                   <TableCell>{cow.animal}</TableCell>
                   <TableCell>{cow.origem}</TableCell>
@@ -295,6 +369,12 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { ti
                       {cow.registrationStatus}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" onClick={() => onRowClick(cow)}>
+                        <PencilRuler className="h-4 w-4" />
+                        <span className="sr-only">Editar</span>
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -307,3 +387,5 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { ti
     </div>
   );
 }
+
+    
