@@ -39,11 +39,11 @@ type SortDirection = 'asc' | 'desc' | null;
 export default function BirthsPage() {
   const { births: allBirths } = useData();
   const [filters, setFilters] = React.useState<Record<string, string[]>>({
-     cowId: [], date: [], sex: [], farm: [], breed: [], sire: [], lot: [], location: [], observations: [],
+     cowId: [], date: [], sex: [], farm: [], breed: [], sire: [], lot: [], location: [], observations: [], obs1: [], jvvo: []
   });
   const [sort, setSort] = React.useState<{ column: ColumnKey | null; direction: SortDirection }>({ column: null, direction: null });
   const [searchTerms, setSearchTerms] = React.useState<Record<string, string>>({
-    cowId: '', date: '', sex: '', farm: '', breed: '', sire: '', lot: '', location: '', observations: '',
+    cowId: '', date: '', sex: '', farm: '', breed: '', sire: '', lot: '', location: '', observations: '', obs1: '', jvvo: ''
   });
 
   const handleFilterChange = (column: ColumnKey, value: string) => {
@@ -97,7 +97,7 @@ export default function BirthsPage() {
     const uniqueValues = Array.from(new Set(dataSet.map(item => item[column]))).sort();
     if (!searchTerm) return uniqueValues;
     // @ts-ignore
-    return uniqueValues.filter(value => value.toLowerCase().includes(searchTerm));
+    return uniqueValues.filter(value => value && value.toLowerCase().includes(searchTerm));
   };
   
   const clearFilter = (column: ColumnKey) => {
@@ -111,7 +111,7 @@ export default function BirthsPage() {
   const renderFilterableHeader = (column: ColumnKey, label: string, dataSet: Birth[]) => {
     const uniqueValues = getUniqueValues(dataSet, column);
     // @ts-ignore
-    const allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => item[column]))).sort();
+    const allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => item[column]))).filter(Boolean).sort();
 
     return (
         <TableHead>
@@ -149,7 +149,7 @@ export default function BirthsPage() {
                     </div>
                 </div>
                  <DropdownMenuCheckboxItem
-                    checked={filters[column].length === allUniqueValuesForSelectAll.length}
+                    checked={filters[column].length === allUniqueValuesForSelectAll.length && allUniqueValuesForSelectAll.length > 0}
                     onCheckedChange={() => {
                         if (filters[column].length === allUniqueValuesForSelectAll.length) {
                             clearFilter(column);
@@ -222,15 +222,16 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
           <Table>
             <TableHeader>
               <TableRow>
-                {renderFilterableHeader('cowId', 'Brinco Mãe', allData)}
-                {renderFilterableHeader('sex', 'Sexo Bezerro', allData)}
-                {renderFilterableHeader('breed', 'Raça Bezerro', allData)}
+                {renderFilterableHeader('cowId', 'Brinco Nº', allData)}
+                {renderFilterableHeader('sex', 'Sexo do Bezerro', allData)}
+                {renderFilterableHeader('breed', 'Raça do Bezerro', allData)}
                 {renderFilterableHeader('sire', 'Nome do Pai', allData)}
-                {renderFilterableHeader('date', 'Data Nasc.', allData)}
+                {renderFilterableHeader('date', 'Data Nascimento', allData)}
                 {renderFilterableHeader('lot', 'Lote', allData)}
+                {renderFilterableHeader('obs1', 'Obs: 1', allData)}
+                {renderFilterableHeader('jvvo', 'JV - Vo', allData)}
                 {renderFilterableHeader('farm', 'Fazenda', allData)}
                 {renderFilterableHeader('location', 'Localização', allData)}
-                {renderFilterableHeader('observations', 'Observações', allData)}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -252,9 +253,10 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
                   <TableCell>{birth.sire}</TableCell>
                   <TableCell>{new Date(birth.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</TableCell>
                   <TableCell>{birth.lot}</TableCell>
+                  <TableCell>{birth.obs1 || '-'}</TableCell>
+                  <TableCell>{birth.jvvo || '-'}</TableCell>
                   <TableCell>{birth.farm}</TableCell>
                   <TableCell>{birth.location}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{birth.observations || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

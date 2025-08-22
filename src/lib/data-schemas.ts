@@ -31,6 +31,8 @@ export const BirthSchema = z.object({
   farm: z.string({ required_error: "Selecione a fazenda." }),
   location: z.string().min(1, "A localização é obrigatória."),
   observations: z.string().optional(),
+  obs1: z.string().optional(),
+  jvvo: z.string().optional(),
 });
 export type Birth = z.infer<typeof BirthSchema>;
 

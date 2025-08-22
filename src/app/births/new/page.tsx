@@ -56,6 +56,8 @@ export default function NewBirthPage() {
       farm: "",
       location: "",
       observations: "",
+      obs1: "",
+      jvvo: "",
     },
   });
 
@@ -264,12 +266,38 @@ export default function NewBirthPage() {
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="obs1"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Obs: 1</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="jvvo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>JV - Vo</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="observations"
                 render={({ field }) => (
                   <FormItem className="md:col-span-3">
-                    <FormLabel>Observações</FormLabel>
+                    <FormLabel>Observações Gerais</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Alguma observação sobre o nascimento..."
