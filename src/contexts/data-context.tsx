@@ -139,14 +139,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const transferBirthToCow = (birth: Birth) => {
     setData(prevData => {
       if (!birth.id) return prevData;
-
+      
       const animalSexName = birth.sex === 'Macho' ? 'Bezerro' : 'Bezerra';
       const newCowId = `${animalSexName.toUpperCase()} DA ${birth.cowId}`;
-      const animalName = `${animalSexName} de ${birth.cowId}`;
 
       const newCow: Cow = {
         id: newCowId, 
-        animal: animalName,
+        animal: animalSexName,
         origem: "Nascimento",
         farm: birth.farm || '',
         lot: birth.lot || '',
@@ -228,5 +227,6 @@ export const useData = () => {
   }
   return context;
 };
+
 
     
