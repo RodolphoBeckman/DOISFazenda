@@ -228,7 +228,7 @@ export default function ImportPage() {
                   parsedDate = dateValue;
                } else {
                   errorCount++;
-                  continue;
+                  continue; 
                }
 
                if (isNaN(parsedDate.getTime())) {
@@ -270,7 +270,7 @@ export default function ImportPage() {
                   }
               });
 
-              if (!birthData.cowId || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
+              if (!birthData.cowId || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location || birthData.cowId === 'undefined') {
                   errorCount++;
                   continue;
               }
@@ -303,7 +303,7 @@ export default function ImportPage() {
           }
         } catch (e) {
             errorCount++;
-            console.error('Validation Error on row:', rowData, e);
+            // console.error('Validation Error on row:', rowData, e);
         }
     }
     
