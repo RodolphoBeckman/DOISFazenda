@@ -140,27 +140,14 @@ export default function ImportPage() {
   const handleImport = async () => {
     setIsLoadingImport(true);
 
-    const headers = previewData.headers.map(h => h ? String(h).trim() : "");
+    const headers = previewData.headers.map(h => h ? String(h).trim().toLowerCase() : "");
     
     const getColumnValue = (rowObject: {[key: string]: any}, keys: string[]): any => {
         for (const key of keys) {
-            const keyVariations = [
-                key, 
-                key.toLowerCase(), 
-                key.replace(/\s/g, ''), 
-                key.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            ];
-            for (const variation of keyVariations) {
-                 if (rowObject.hasOwnProperty(variation)) {
-                    return rowObject[variation];
-                 }
-            }
-            for (const rowKey in rowObject) {
-                 const normalizedRowKey = rowKey.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                 const normalizedKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                 if (normalizedRowKey === normalizedKey) {
-                    return rowObject[rowKey];
-                 }
+            const normalizedKey = key.toLowerCase();
+            const foundKey = Object.keys(rowObject).find(rowKey => rowKey.trim().toLowerCase() === normalizedKey);
+            if (foundKey && rowObject[foundKey] !== null) {
+                return rowObject[foundKey];
             }
         }
         return undefined;
@@ -177,8 +164,10 @@ export default function ImportPage() {
         }
 
         const rowData: { [key: string]: any } = {};
-        headers.forEach((header, index) => {
-            rowData[header] = row[index];
+        previewData.headers.forEach((header, index) => {
+            if (header) {
+                rowData[String(header).trim()] = row[index];
+            }
         });
         
         try {
@@ -190,6 +179,7 @@ export default function ImportPage() {
                   farm: getColumnValue(rowData, ['Fazenda']),
                   lot: getColumnValue(rowData, ['Lote']),
                   location: getColumnValue(rowData, ['Localização', 'Local']),
+                  status: getColumnValue(rowData, ['Status']),
                   registrationStatus: getColumnValue(rowData, ['Status do Cadastro']) || 'Ativo',
                   loteT: getColumnValue(rowData, ['Lote T.']),
                   obs1: getColumnValue(rowData, ['Obs: 1']),
@@ -198,12 +188,13 @@ export default function ImportPage() {
                   ano: getColumnValue(rowData, ['Ano']),
               };
 
-              const statusValue = getColumnValue(rowData, ['Status']);
-              if (statusValue) {
-                  cowData.status = statusValue;
-              }
-              
-              if (!cowData.id || !cowData.animal || !cowData.location) {
+              Object.keys(cowData).forEach(key => {
+                  if (cowData[key] === undefined) {
+                    cowData[key] = undefined;
+                  }
+              });
+
+              if (!cowData.id || cowData.id === 'undefined' || !cowData.animal || !cowData.origem || !cowData.farm || !cowData.lot || !cowData.location) {
                   errorCount++;
                   continue;
               }
@@ -228,31 +219,30 @@ export default function ImportPage() {
           } else if (importType === 'nascimentos') {
                const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
                let parsedDate;
-               if (typeof dateValue === 'string') {
-                 const parts = dateValue.split(/[/.-]/);
-                 if (parts.length === 3) {
-                    const day = parts[0];
-                    const month = parts[1];
-                    const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2]) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
-                    const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
-                    parsedDate = new Date(isoDateString);
-                 } else {
-                    parsedDate = new Date(dateValue);
-                 }
-               } else if (dateValue instanceof Date) {
-                  parsedDate = dateValue;
-               } else {
-                  errorCount++;
-                  continue; 
+               if (dateValue) {
+                   if (typeof dateValue === 'string') {
+                     const parts = dateValue.split(/[/.-]/);
+                     if (parts.length === 3) {
+                        const day = parts[0];
+                        const month = parts[1];
+                        const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2]) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
+                        const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
+                        parsedDate = new Date(isoDateString);
+                     } else {
+                        parsedDate = new Date(dateValue);
+                     }
+                   } else if (dateValue instanceof Date) {
+                      parsedDate = dateValue;
+                   }
                }
-
-               if (isNaN(parsedDate.getTime())) {
+               
+               if (!parsedDate || isNaN(parsedDate.getTime())) {
                   errorCount++;
                   continue; 
                }
 
                let sexValue: 'Macho' | 'Fêmea' | 'Aborto' | undefined = undefined;
-               const rawSexValue = getColumnValue(rowData, ['Sexo do Bezerro']);
+               const rawSexValue = getColumnValue(rowData, ['Sexo do Bezerro', 'Sexo']);
 
                 if (typeof rawSexValue === 'string' && rawSexValue.trim() !== '') {
                     const lowerSex = rawSexValue.trim().toLowerCase();
@@ -268,11 +258,11 @@ export default function ImportPage() {
                const birthData: Partial<Birth> = {
                   cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
                   sex: sexValue,
-                  breed: getColumnValue(rowData, ['Raça do Bezerro']),
+                  breed: getColumnValue(rowData, ['Raça do Bezerro', 'Raça']),
                   sire: getColumnValue(rowData, ['Nome do Pai']),
                   lot: getColumnValue(rowData, ['Lote']),
                   farm: getColumnValue(rowData, ['Fazenda']),
-                  location: getColumnValue(rowData, ['Localização']),
+                  location: getColumnValue(rowData, ['Localização', 'Local']),
                   observations: getColumnValue(rowData, ['Observações']),
                   obs1: getColumnValue(rowData, ['Obs: 1']),
                   jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
@@ -280,12 +270,12 @@ export default function ImportPage() {
                
               Object.keys(birthData).forEach(key => {
                   const typedKey = key as keyof typeof birthData;
-                  if (birthData[typedKey] === null) {
+                  if (birthData[typedKey] === null || birthData[typedKey] === undefined) {
                       (birthData as any)[typedKey] = undefined;
                   }
               });
               
-              if (!birthData.cowId || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location || birthData.cowId === 'undefined') {
+              if (!birthData.cowId || birthData.cowId === 'undefined' || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
                   errorCount++;
                   continue;
               }
@@ -356,112 +346,112 @@ export default function ImportPage() {
 
   return (
     <>
-    <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight font-headline">
-          Importar Dados
-        </h1>
-      </div>
-
-      <Card className="w-full max-w-3xl mx-auto">
-        <CardHeader>
-          <CardTitle>Upload de Planilha</CardTitle>
-          <CardDescription>
-            Importe dados de Vacas ou Nascimentos a partir de um arquivo CSV ou XLSX.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Label htmlFor="import-type">Tipo de Importação</Label>
-                <Select value={importType} onValueChange={setImportType} disabled={isLoadingPreview || isLoadingImport}>
-                    <SelectTrigger id="import-type">
-                        <SelectValue placeholder="Selecione o tipo..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="vacas">Cadastro de Vacas</SelectItem>
-                        <SelectItem value="nascimentos">Registro de Nascimentos</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Label htmlFor="file-upload">Arquivo (CSV, XLSX)</Label>
-                <Input id="file-upload" type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" onChange={handleFileChange} disabled={isLoadingPreview || isLoadingImport} />
-            </div>
-          </div>
-           {file && (
-            <div className="text-sm text-muted-foreground">
-                Arquivo selecionado: <span className="font-medium">{file.name}</span>
-            </div>
-            )}
-             <div className="flex items-center space-x-2">
-                <Switch 
-                  id="replace-data" 
-                  checked={replaceData} 
-                  onCheckedChange={setReplaceData} 
-                  disabled={isLoadingPreview || isLoadingImport}
-                />
-                <Label htmlFor="replace-data">Substituir dados existentes</Label>
-            </div>
-
-        </CardContent>
-        <CardFooter className="flex justify-end gap-2 border-t pt-6">
-            <Button onClick={handlePreview} variant="outline" disabled={!file || !importType || isLoadingPreview || isLoadingImport}>
-                {isLoadingPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
-                Pré-visualizar
-            </Button>
-            <Button onClick={triggerImport} disabled={!showPreview || fullData.length === 0 || isLoadingImport || isLoadingPreview}>
-            {isLoadingImport ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-                <Upload className="mr-2 h-4 w-4" />
-            )}
+      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight font-headline">
             Importar Dados
-          </Button>
-        </CardFooter>
-      </Card>
-      
-      {showPreview && (
-        <Card className="w-full max-w-3xl mx-auto mt-6">
-            <CardHeader>
-                <CardTitle>Pré-visualização dos Dados</CardTitle>
-                <CardDescription>
-                    Confira se as colunas e os dados estão corretos antes de importar. Serão exibidas as 3 primeiras linhas do arquivo como exemplo.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingPreview ? (
-                  <div className="flex items-center justify-center h-40">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
-              ) : previewData.rows.length > 0 ? (
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                {previewData.headers.map((header, index) => <TableHead key={`${header}-${index}`}>{header}</TableHead>)}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {previewData.rows.map((row, rowIndex) => (
-                                <TableRow key={rowIndex}>
-                                    {row.map((cell, cellIndex) => <TableCell key={cellIndex}>{String(cell ?? '')}</TableCell>)}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-              ) : (
-                <div className="text-center text-muted-foreground py-8">
-                  Nenhum dado encontrado no arquivo ou o arquivo está vazio.
-                </div>
-              )}
-            </CardContent>
-        </Card>
-      )}
+          </h1>
+        </div>
 
-    </main>
-     <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <Card className="w-full max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle>Upload de Planilha</CardTitle>
+            <CardDescription>
+              Importe dados de Vacas ou Nascimentos a partir de um arquivo CSV ou XLSX.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                  <Label htmlFor="import-type">Tipo de Importação</Label>
+                  <Select value={importType} onValueChange={setImportType} disabled={isLoadingPreview || isLoadingImport}>
+                      <SelectTrigger id="import-type">
+                          <SelectValue placeholder="Selecione o tipo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="vacas">Cadastro de Vacas</SelectItem>
+                          <SelectItem value="nascimentos">Registro de Nascimentos</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                  <Label htmlFor="file-upload">Arquivo (CSV, XLSX)</Label>
+                  <Input id="file-upload" type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" onChange={handleFileChange} disabled={isLoadingPreview || isLoadingImport} />
+              </div>
+            </div>
+            {file && (
+              <div className="text-sm text-muted-foreground">
+                  Arquivo selecionado: <span className="font-medium">{file.name}</span>
+              </div>
+              )}
+              <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="replace-data" 
+                    checked={replaceData} 
+                    onCheckedChange={setReplaceData} 
+                    disabled={isLoadingPreview || isLoadingImport}
+                  />
+                  <Label htmlFor="replace-data">Substituir dados existentes</Label>
+              </div>
+
+          </CardContent>
+          <CardFooter className="flex justify-end gap-2 border-t pt-6">
+              <Button onClick={handlePreview} variant="outline" disabled={!file || !importType || isLoadingPreview || isLoadingImport}>
+                  {isLoadingPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                  Pré-visualizar
+              </Button>
+              <Button onClick={triggerImport} disabled={!showPreview || fullData.length === 0 || isLoadingImport || isLoadingPreview}>
+              {isLoadingImport ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+              )}
+              Importar Dados
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        {showPreview && (
+          <Card className="w-full max-w-3xl mx-auto mt-6">
+              <CardHeader>
+                  <CardTitle>Pré-visualização dos Dados</CardTitle>
+                  <CardDescription>
+                      Confira se as colunas e os dados estão corretos antes de importar. Serão exibidas as 3 primeiras linhas do arquivo como exemplo.
+                  </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingPreview ? (
+                    <div className="flex items-center justify-center h-40">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : previewData.rows.length > 0 ? (
+                  <div className="overflow-x-auto">
+                      <Table>
+                          <TableHeader>
+                              <TableRow>
+                                  {previewData.headers.map((header, index) => <TableHead key={`${header}-${index}`}>{header}</TableHead>)}
+                              </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                              {previewData.rows.map((row, rowIndex) => (
+                                  <TableRow key={rowIndex}>
+                                      {row.map((cell, cellIndex) => <TableCell key={cellIndex}>{String(cell ?? '')}</TableCell>)}
+                                  </TableRow>
+                              ))}
+                          </TableBody>
+                      </Table>
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    Nenhum dado encontrado no arquivo ou o arquivo está vazio.
+                  </div>
+                )}
+              </CardContent>
+          </Card>
+        )}
+
+      </main>
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
@@ -485,3 +475,5 @@ export default function ImportPage() {
     </>
   );
 }
+
+    
