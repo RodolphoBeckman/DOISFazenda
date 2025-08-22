@@ -40,11 +40,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2 } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import { useData } from '@/contexts/data-context';
 import type { Cow } from '@/lib/data-schemas';
 import EditCowDialog from '@/components/edit-cow-dialog';
+import DiscardCowDialog from '@/components/discard-cow-dialog';
 import BulkUpdateLotDialog from '@/components/bulk-update-lot-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -66,6 +67,7 @@ export default function CowsPage() {
   });
   const [isClient, setIsClient] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = React.useState(false);
   const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = React.useState(false);
   const [selectedCow, setSelectedCow] = React.useState<Cow | null>(null);
   const [selectedCows, setSelectedCows] = React.useState<string[]>([]);
@@ -80,6 +82,11 @@ export default function CowsPage() {
   const handleEditClick = (cow: Cow) => {
     setSelectedCow(cow);
     setIsEditDialogOpen(true);
+  };
+  
+  const handleDiscardClick = (cow: Cow) => {
+    setSelectedCow(cow);
+    setIsDiscardDialogOpen(true);
   };
 
   const handleDeleteClick = (cow: Cow) => {
@@ -291,6 +298,7 @@ export default function CowsPage() {
             renderFilterableHeader={renderFilterableHeader} 
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
+            onDiscardClick={handleDiscardClick}
             selectedCows={selectedCows}
             onSelectCow={handleSelectCow}
             onSelectAllCows={() => handleSelectAllCows(filteredData)}
@@ -306,6 +314,7 @@ export default function CowsPage() {
                         renderFilterableHeader={renderFilterableHeader}
                         onEditClick={handleEditClick}
                         onDeleteClick={handleDeleteClick}
+                        onDiscardClick={handleDiscardClick}
                         selectedCows={selectedCows}
                         onSelectCow={handleSelectCow}
                         onSelectAllCows={() => handleSelectAllCows(statusFilteredData)}
@@ -319,6 +328,11 @@ export default function CowsPage() {
         cow={selectedCow}
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
+      />
+      <DiscardCowDialog
+        cow={selectedCow}
+        isOpen={isDiscardDialogOpen}
+        onClose={() => setIsDiscardDialogOpen(false)}
       />
       <BulkUpdateLotDialog
         isOpen={isBulkUpdateDialogOpen}
@@ -351,12 +365,13 @@ interface CardWithTableProps {
     renderFilterableHeader: (column: ColumnKey, label: string) => React.ReactNode;
     onEditClick: (cow: Cow) => void;
     onDeleteClick: (cow: Cow) => void;
+    onDiscardClick: (cow: Cow) => void;
     selectedCows: string[];
     onSelectCow: (cowId: string) => void;
     onSelectAllCows: () => void;
 }
 
-function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDeleteClick, selectedCows, onSelectCow, onSelectAllCows }: CardWithTableProps) {
+function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDeleteClick, onDiscardClick, selectedCows, onSelectCow, onSelectAllCows }: CardWithTableProps) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
       <div className="p-6">
@@ -426,6 +441,10 @@ function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDel
                           <PencilRuler className="h-4 w-4" />
                           <span className="sr-only">Editar</span>
                       </Button>
+                       <Button variant="ghost" size="icon" onClick={() => onDiscardClick(cow)} disabled={cow.registrationStatus === 'Inativo'}>
+                          <Archive className="h-4 w-4" />
+                          <span className="sr-only">Descartar</span>
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                           <span className="sr-only">Excluir</span>
@@ -444,3 +463,5 @@ function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDel
     </div>
   );
 }
+
+    

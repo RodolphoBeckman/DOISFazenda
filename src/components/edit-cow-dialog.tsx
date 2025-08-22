@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -23,15 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { useSettings } from "@/contexts/settings-context"
 import { useData } from "@/contexts/data-context"
 import { CowSchema, type Cow } from "@/lib/data-schemas"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
 type FormValues = z.infer<typeof CowSchema>;
 
-// Data for selectors
 const statuses: string[] = ["Vazia", "Prenha", "Com cria"];
 const origins: string[] = ["Nascimento", "Compra", "Transferência"];
 const registrationStatuses: string[] = ["Ativo", "Inativo"];
@@ -49,8 +48,14 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
 
   const form = useForm<FormValues>({
     resolver: zodResolver(CowSchema),
-    values: cow || {}, // Pre-populate form with cow data
+    defaultValues: cow || {},
   });
+  
+  useEffect(() => {
+    if (cow) {
+      form.reset(cow);
+    }
+  }, [cow, form]);
 
   function onSubmit(data: FormValues) {
     if (!cow) return;
@@ -296,12 +301,14 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                     )}
                 />
                 </div>
-                <CardFooter className="border-t px-6 py-4 mt-4">
+                <DialogFooter className="border-t pt-4 mt-4">
                     <Button type="submit">Salvar Alterações</Button>
-                </CardFooter>
+                </DialogFooter>
             </form>
             </Form>
         </DialogContent>
     </Dialog>
   );
 }
+
+    
