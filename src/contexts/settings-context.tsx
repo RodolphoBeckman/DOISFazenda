@@ -17,7 +17,7 @@ interface SettingsContextType {
   deleteSettingItem: (category: Category, itemId: string) => void;
 }
 
-const SETTINGS_STORAGE_KEY = 'cattleLifeSettings';
+const SETTINGS_STORAGE_KEY = 'doisSettings';
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 

@@ -7,7 +7,7 @@ import { SettingsProvider } from "@/contexts/settings-context";
 import { DataProvider } from "@/contexts/data-context";
 
 export const metadata: Metadata = {
-  title: "CattleLife - Controle de Vacas Paridas",
+  title: "DOIS - Controle de Vacas Paridas",
   description: "Gestão de gado de corte: nascimentos, IATF, lotes e mais.",
 };
 

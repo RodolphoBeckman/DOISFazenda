@@ -51,7 +51,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="h-16 flex items-center justify-between p-2">
           <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
              <Logo />
-            <span className="font-bold text-xl font-headline">CattleLife</span>
+            <span className="font-bold text-xl font-headline">DOIS</span>
           </div>
           <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
         </SidebarHeader>

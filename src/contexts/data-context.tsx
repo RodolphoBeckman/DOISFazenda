@@ -30,7 +30,7 @@ interface DataContextType {
   deleteIATF: (id: string) => void;
 }
 
-const DATA_STORAGE_KEY = 'cattleLifeData';
+const DATA_STORAGE_KEY = 'doisData';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
