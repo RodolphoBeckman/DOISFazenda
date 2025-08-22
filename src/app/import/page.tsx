@@ -146,7 +146,7 @@ export default function ImportPage() {
         for (const key of keys) {
             const normalizedKey = key.toLowerCase();
             const foundKey = Object.keys(rowObject).find(rowKey => rowKey.trim().toLowerCase() === normalizedKey);
-            if (foundKey && rowObject[foundKey] !== null) {
+            if (foundKey && rowObject[foundKey] !== undefined && rowObject[foundKey] !== null) {
                 return rowObject[foundKey];
             }
         }
@@ -187,17 +187,17 @@ export default function ImportPage() {
                   mes: getColumnValue(rowData, ['Mês']),
                   ano: getColumnValue(rowData, ['Ano']),
               };
+              
+              if (!cowData.id || cowData.id === 'undefined' || !cowData.animal || !cowData.origem || !cowData.farm || !cowData.lot || !cowData.location) {
+                  errorCount++;
+                  continue;
+              }
 
               Object.keys(cowData).forEach(key => {
                   if (cowData[key] === undefined) {
                     cowData[key] = undefined;
                   }
               });
-
-              if (!cowData.id || cowData.id === 'undefined' || !cowData.animal || !cowData.origem || !cowData.farm || !cowData.lot || !cowData.location) {
-                  errorCount++;
-                  continue;
-              }
 
               const newFarm = cowData.farm;
               if (newFarm && !settings.farms.some(f => f.name.trim().toLowerCase() === newFarm.trim().toLowerCase())) {
@@ -235,8 +235,14 @@ export default function ImportPage() {
                       parsedDate = dateValue;
                    }
                }
-               
-               if (!parsedDate || isNaN(parsedDate.getTime())) {
+
+               const rawCowId = getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº']);
+               const rawBreed = getColumnValue(rowData, ['Raça do Bezerro', 'Raça']);
+               const rawLot = getColumnValue(rowData, ['Lote']);
+               const rawFarm = getColumnValue(rowData, ['Fazenda']);
+               const rawLocation = getColumnValue(rowData, ['Localização', 'Local']);
+
+               if (!rawCowId || !parsedDate || isNaN(parsedDate.getTime()) || !rawBreed || !rawLot || !rawFarm || !rawLocation) {
                   errorCount++;
                   continue; 
                }
@@ -256,13 +262,14 @@ export default function ImportPage() {
                 }
 
                const birthData: Partial<Birth> = {
-                  cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
+                  cowId: String(rawCowId),
+                  date: parsedDate,
                   sex: sexValue,
-                  breed: getColumnValue(rowData, ['Raça do Bezerro', 'Raça']),
+                  breed: rawBreed,
                   sire: getColumnValue(rowData, ['Nome do Pai']),
-                  lot: getColumnValue(rowData, ['Lote']),
-                  farm: getColumnValue(rowData, ['Fazenda']),
-                  location: getColumnValue(rowData, ['Localização', 'Local']),
+                  lot: rawLot,
+                  farm: rawFarm,
+                  location: rawLocation,
                   observations: getColumnValue(rowData, ['Observações']),
                   obs1: getColumnValue(rowData, ['Obs: 1']),
                   jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
@@ -274,16 +281,6 @@ export default function ImportPage() {
                       (birthData as any)[typedKey] = undefined;
                   }
               });
-              
-              if (!birthData.cowId || birthData.cowId === 'undefined' || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
-                  errorCount++;
-                  continue;
-              }
-               
-              const validatedBirthData = {
-                ...birthData,
-                date: parsedDate,
-              };
 
               const newFarm = birthData.farm;
               if (newFarm && !settings.farms.some(f => f.name.trim().toLowerCase() === newFarm.trim().toLowerCase())) {
@@ -298,7 +295,7 @@ export default function ImportPage() {
                    addSettingItem('breeds', { id: crypto.randomUUID(), name: newBreed });
               }
 
-              const birth = BirthSchema.parse(validatedBirthData);
+              const birth = BirthSchema.parse(birthData);
               if (replaceData) {
                   newBirths.push(birth);
               } else {
@@ -475,5 +472,3 @@ export default function ImportPage() {
     </>
   );
 }
-
-    
