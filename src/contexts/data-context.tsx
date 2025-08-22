@@ -14,6 +14,7 @@ interface DataContextType {
   births: Birth[];
   addCow: (cow: Cow) => void;
   updateCow: (id: string, updatedCow: Cow) => void;
+  deleteCow: (id: string) => void;
   updateCowsLot: (ids: string[], newLot: string) => void;
   addBirth: (birth: Birth) => void;
 }
@@ -61,6 +62,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }));
   }
 
+  const deleteCow = (id: string) => {
+    setData((prevData) => ({
+      ...prevData,
+      cows: prevData.cows.filter(cow => cow.id !== id),
+    }));
+  };
+
   const updateCowsLot = (ids: string[], newLot: string) => {
     setData((prevData) => ({
       ...prevData,
@@ -78,7 +86,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <DataContext.Provider value={{ data: data.cows, births: data.births, addCow, updateCow, updateCowsLot, addBirth }}>
+    <DataContext.Provider value={{ data: data.cows, births: data.births, addCow, updateCow, deleteCow, updateCowsLot, addBirth }}>
       {children}
     </DataContext.Provider>
   );

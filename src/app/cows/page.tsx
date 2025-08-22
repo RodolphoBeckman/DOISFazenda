@@ -26,23 +26,37 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2 } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import { useData } from '@/contexts/data-context';
 import type { Cow } from '@/lib/data-schemas';
 import EditCowDialog from '@/components/edit-cow-dialog';
 import BulkUpdateLotDialog from '@/components/bulk-update-lot-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
 
 
 type ColumnKey = keyof Cow;
 type SortDirection = 'asc' | 'desc' | null;
 
 export default function CowsPage() {
-  const { data: allCows } = useData();
+  const { data: allCows, deleteCow } = useData();
+  const { toast } = useToast();
+
   const [filters, setFilters] = React.useState<Record<ColumnKey, string[]>>({
     id: [], animal: [], origem: [], farm: [], lot: [], location: [], status: [], registrationStatus: [], loteT: [], obs1: [], motivoDoDescarte: [], mes: [], ano: []
   });
@@ -55,15 +69,34 @@ export default function CowsPage() {
   const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = React.useState(false);
   const [selectedCow, setSelectedCow] = React.useState<Cow | null>(null);
   const [selectedCows, setSelectedCows] = React.useState<string[]>([]);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
+  const [cowToDelete, setCowToDelete] = React.useState<Cow | null>(null);
 
 
   React.useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const handleRowClick = (cow: Cow) => {
+  const handleEditClick = (cow: Cow) => {
     setSelectedCow(cow);
     setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (cow: Cow) => {
+    setCowToDelete(cow);
+    setIsAlertOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (cowToDelete) {
+      deleteCow(cowToDelete.id);
+      toast({
+        title: "Vaca Excluída",
+        description: `A vaca com brinco Nº ${cowToDelete.id} foi removida.`,
+      });
+      setIsAlertOpen(false);
+      setCowToDelete(null);
+    }
   };
 
   const handleSelectCow = (cowId: string) => {
@@ -143,7 +176,7 @@ export default function CowsPage() {
 
   const selectAll = (column: ColumnKey, allValues: (string | undefined)[]) => {
     // @ts-ignore
-    setFilters(prev => ({ ...prev, [column]: allValues.map(v => String(v)) }));
+    setFilters(prev => ({ ...prev, [column]: allValues.filter(Boolean).map(v => String(v)) }));
   }
 
   const renderFilterableHeader = (column: ColumnKey, label: string) => {
@@ -187,9 +220,9 @@ export default function CowsPage() {
                     </div>
                 </div>
                  <DropdownMenuCheckboxItem
-                    checked={filters[column].length === allUniqueValuesForSelectAll.length}
+                    checked={filters[column].length === allUniqueValuesForSelectAll.filter(Boolean).length && allUniqueValuesForSelectAll.filter(Boolean).length > 0}
                     onCheckedChange={() => {
-                        if (filters[column].length === allUniqueValuesForSelectAll.length) {
+                        if (filters[column].length === allUniqueValuesForSelectAll.filter(Boolean).length) {
                             clearFilter(column);
                         } else {
                             selectAll(column, allUniqueValuesForSelectAll);
@@ -256,7 +289,8 @@ export default function CowsPage() {
             title="Todas as Vacas" 
             data={filteredData} 
             renderFilterableHeader={renderFilterableHeader} 
-            onRowClick={handleRowClick}
+            onEditClick={handleEditClick}
+            onDeleteClick={handleDeleteClick}
             selectedCows={selectedCows}
             onSelectCow={handleSelectCow}
             onSelectAllCows={() => handleSelectAllCows(filteredData)}
@@ -270,7 +304,8 @@ export default function CowsPage() {
                         title={`Vacas ${status}`}
                         data={statusFilteredData}
                         renderFilterableHeader={renderFilterableHeader}
-                        onRowClick={handleRowClick}
+                        onEditClick={handleEditClick}
+                        onDeleteClick={handleDeleteClick}
                         selectedCows={selectedCows}
                         onSelectCow={handleSelectCow}
                         onSelectAllCows={() => handleSelectAllCows(statusFilteredData)}
@@ -291,6 +326,21 @@ export default function CowsPage() {
         cowIds={selectedCows}
         onSuccess={() => setSelectedCows([])}
       />
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o registro da vaca com brinco
+              <span className="font-bold"> Nº {cowToDelete?.id}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCowToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
@@ -299,13 +349,14 @@ interface CardWithTableProps {
     title: string;
     data: Cow[];
     renderFilterableHeader: (column: ColumnKey, label: string) => React.ReactNode;
-    onRowClick: (cow: Cow) => void;
+    onEditClick: (cow: Cow) => void;
+    onDeleteClick: (cow: Cow) => void;
     selectedCows: string[];
     onSelectCow: (cowId: string) => void;
     onSelectAllCows: () => void;
 }
 
-function CardWithTable({ title, data, renderFilterableHeader, onRowClick, selectedCows, onSelectCow, onSelectAllCows }: CardWithTableProps) {
+function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDeleteClick, selectedCows, onSelectCow, onSelectAllCows }: CardWithTableProps) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
       <div className="p-6">
@@ -334,7 +385,7 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick, select
                 {renderFilterableHeader('mes', 'Mês')}
                 {renderFilterableHeader('ano', 'Ano')}
                 {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
-                <TableHead className="w-[50px]">Ações</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -369,10 +420,14 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick, select
                       {cow.registrationStatus}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => onRowClick(cow)}>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => onEditClick(cow)}>
                         <PencilRuler className="h-4 w-4" />
                         <span className="sr-only">Editar</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Excluir</span>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -387,5 +442,3 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick, select
     </div>
   );
 }
-
-    
