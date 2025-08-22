@@ -217,38 +217,42 @@ export default function ImportPage() {
           } else if (importType === 'nascimentos') {
                const rawCowId = getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº']);
                const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
+               
+               // Strict check for the most essential fields. If any are missing, skip the row silently.
+               if (!rawCowId || !dateValue) {
+                  continue; 
+               }
+
+               let parsedDate;
+               if (typeof dateValue === 'number') { // Handle Excel date serial numbers
+                  const excelEpoch = new Date(1899, 11, 30);
+                  parsedDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
+               } else if (typeof dateValue === 'string') {
+                   const parts = dateValue.split(/[/.-]/);
+                   if (parts.length === 3) {
+                      const day = parts[0];
+                      const month = parts[1];
+                      const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2]) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
+                      const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
+                      parsedDate = new Date(isoDateString);
+                   } else {
+                      parsedDate = new Date(dateValue);
+                   }
+               } else if (dateValue instanceof Date) {
+                  parsedDate = dateValue;
+               }
+
+               if (!parsedDate || isNaN(parsedDate.getTime())) {
+                   continue; // Skip if date is still invalid
+               }
+
                const rawBreed = getColumnValue(rowData, ['Raça do Bezerro', 'Raça']);
                const rawLot = getColumnValue(rowData, ['Lote']);
                const rawFarm = getColumnValue(rowData, ['Fazenda']);
                const rawLocation = getColumnValue(rowData, ['Localização', 'Local']);
 
-               // Strict check for required fields. If any are missing, skip the row silently.
-               if (!rawCowId || !dateValue || !rawBreed || !rawLot || !rawFarm || !rawLocation) {
-                  errorCount++;
-                  continue; 
-               }
-
-               let parsedDate;
-               if (dateValue) {
-                   if (typeof dateValue === 'string') {
-                     const parts = dateValue.split(/[/.-]/);
-                     if (parts.length === 3) {
-                        const day = parts[0];
-                        const month = parts[1];
-                        const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2]) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
-                        const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
-                        parsedDate = new Date(isoDateString);
-                     } else {
-                        parsedDate = new Date(dateValue);
-                     }
-                   } else if (dateValue instanceof Date) {
-                      parsedDate = dateValue;
-                   }
-               }
-
-               // If after parsing, date is invalid, also skip.
-               if (!parsedDate || isNaN(parsedDate.getTime())) {
-                   errorCount++;
+               // Check other required fields after handling the date
+               if (!rawBreed || !rawLot || !rawFarm || !rawLocation) {
                    continue;
                }
 
@@ -477,3 +481,5 @@ export default function ImportPage() {
     </>
   );
 }
+
+    
