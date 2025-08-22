@@ -55,3 +55,8 @@ export const DisposalReasonSchema = z.object({
   reason: z.string(),
 });
 export type DisposalReason = z.infer<typeof DisposalReasonSchema>;
+
+
+export type Item = { id: string; name: string };
+export type Category = "lots" | "pastures" | "farms" | "breeds";
+

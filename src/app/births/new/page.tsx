@@ -32,6 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { useSettings } from "@/contexts/settings-context"
 
 const FormSchema = z.object({
   cowId: z.string({ required_error: "Selecione a vaca." }),
@@ -49,12 +50,11 @@ type FormValues = z.infer<typeof FormSchema>;
 
 // Data for selectors - in a real app, this would come from a database or API
 const cows: { id: string, farm: string }[] = [];
-const farms: string[] = [];
-const lots: string[] = [];
-
 
 export default function NewBirthPage() {
   const { toast } = useToast()
+  const { settings } = useSettings();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -187,9 +187,18 @@ export default function NewBirthPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Raça do Bezerro</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: Nelore" {...field} />
-                    </FormControl>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a raça..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {settings.breeds.map((breed) => (
+                          <SelectItem key={breed.id} value={breed.name}>{breed.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -220,8 +229,8 @@ export default function NewBirthPage() {
                         </Trigger>
                       </FormControl>
                       <SelectContent>
-                        {lots.map((lot) => (
-                          <SelectItem key={lot} value={lot}>{lot}</SelectItem>
+                        {settings.lots.map((lot) => (
+                          <SelectItem key={lot.id} value={lot.name}>{lot.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -242,8 +251,8 @@ export default function NewBirthPage() {
                         </Trigger>
                       </FormControl>
                       <SelectContent>
-                        {farms.map(farm => (
-                          <SelectItem key={farm} value={farm}>{farm}</SelectItem>
+                        {settings.farms.map(farm => (
+                          <SelectItem key={farm.id} value={farm.name}>{farm.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

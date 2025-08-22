@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppLayout } from "@/components/layout/app-layout";
+import { SettingsProvider } from "@/contexts/settings-context";
 
 export const metadata: Metadata = {
   title: "CattleLife - Controle de Vacas Paridas",
@@ -29,10 +30,12 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <SidebarProvider>
-          <AppLayout>{children}</AppLayout>
-          <Toaster />
-        </SidebarProvider>
+        <SettingsProvider>
+          <SidebarProvider>
+            <AppLayout>{children}</AppLayout>
+            <Toaster />
+          </SidebarProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

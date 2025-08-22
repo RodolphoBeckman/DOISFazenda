@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { useSettings } from "@/contexts/settings-context"
 
 const FormSchema = z.object({
   id: z.string().min(1, "O ID da vaca é obrigatório."),
@@ -42,15 +43,15 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
-// Data for selectors - in a real app, this would come from a database or API
-const farms: string[] = [];
-const lots: string[] = [];
+// Data for selectors
 const statuses: string[] = ["Vazia", "Prenha", "Com cria"];
-const origins: string[] = [];
+const origins: string[] = ["Nascimento", "Compra", "Transferência"]; // Example static origins
 const registrationStatuses: string[] = ["Ativo", "Inativo"];
 
 export default function NewCowPage() {
   const { toast } = useToast()
+  const { settings } = useSettings();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -155,8 +156,8 @@ export default function NewCowPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {farms.map((farm) => (
-                          <SelectItem key={farm} value={farm}>{farm}</SelectItem>
+                        {settings.farms.map((farm) => (
+                          <SelectItem key={farm.id} value={farm.name}>{farm.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -178,8 +179,8 @@ export default function NewCowPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {lots.map((lot) => (
-                          <SelectItem key={lot} value={lot}>{lot}</SelectItem>
+                        {settings.lots.map((lot) => (
+                          <SelectItem key={lot.id} value={lot.name}>{lot.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

@@ -36,9 +36,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-type Item = { id: string; name: string };
-type Category = "lots" | "pastures" | "farms" | "breeds";
+import { useSettings } from "@/contexts/settings-context";
+import { type Item, type Category } from "@/lib/data-schemas";
 
 const categoryLabels: Record<Category, { singular: string; plural: string }> = {
   lots: { singular: "Lote", plural: "Lotes" },
@@ -49,21 +48,11 @@ const categoryLabels: Record<Category, { singular: string; plural: string }> = {
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [lots, setLots] = useState<Item[]>([]);
-  const [pastures, setPastures] = useState<Item[]>([]);
-  const [farms, setFarms] = useState<Item[]>([]);
-  const [breeds, setBreeds] = useState<Item[]>([]);
-
+  const { settings, addSettingItem } = useSettings();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogCategory, setDialogCategory] = useState<Category | null>(null);
   const [newItemName, setNewItemName] = useState("");
-
-  const dataMap = {
-    lots: { items: lots, setItems: setLots },
-    pastures: { items: pastures, setItems: setPastures },
-    farms: { items: farms, setItems: setFarms },
-    breeds: { items: breeds, setItems: setBreeds },
-  };
 
   const handleOpenDialog = (category: Category) => {
     setDialogCategory(category);
@@ -73,22 +62,19 @@ export default function SettingsPage() {
 
   const handleAddItem = () => {
     if (!newItemName.trim() || !dialogCategory) return;
-
-    const { items, setItems } = dataMap[dialogCategory];
-    const newItem = { id: crypto.randomUUID(), name: newItemName.trim() };
     
-    setItems([...items, newItem]);
+    addSettingItem(dialogCategory, { id: crypto.randomUUID(), name: newItemName.trim() });
     
     toast({
       title: "Sucesso!",
-      description: `${categoryLabels[dialogCategory].singular} "${newItem.name}" adicionado(a).`,
+      description: `${categoryLabels[dialogCategory].singular} "${newItemName.trim()}" adicionado(a).`,
     });
 
     setIsDialogOpen(false);
   };
 
   const renderTable = (category: Category) => {
-    const { items } = dataMap[category];
+    const items = settings[category];
     const labels = categoryLabels[category];
 
     return (
