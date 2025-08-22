@@ -2,21 +2,23 @@ import { z } from 'zod';
 
 // Esquema para o Cadastro de Animal (Vacas)
 export const CowSchema = z.object({
-  id: z.string().min(1, "O ID da vaca é obrigatório."),
-  animal: z.string().min(1, "O tipo de animal é obrigatório."),
+  id: z.string().min(1, "O Brinco Nº é obrigatório."),
+  animal: z.string().min(1, "O nome do animal é obrigatório."),
   origem: z.string({ required_error: "Selecione a origem." }),
-  lote: z.string({ required_error: "Selecione o lote." }),
+  farm: z.string({ required_error: "Selecione a fazenda." }),
+  lot: z.string({ required_error: "Selecione o lote." }),
+  location: z.string().min(1, "A localização é obrigatória."),
+  status: z.enum(["Vazia", "Prenha", "Com cria"], { required_error: "Selecione o status."}),
+  registrationStatus: z.enum(["Ativo", "Inativo"], { required_error: "Selecione o status do cadastro."}),
+  // Campos opcionais mantidos do esquema original, caso sejam usados no futuro
   loteT: z.string().optional(),
   obs1: z.string().optional(),
-  fazenda: z.string({ required_error: "Selecione a fazenda." }),
-  localizacao: z.string().min(1, "A localização é obrigatória."),
   motivoDoDescarte: z.string().optional(),
   mes: z.string().optional(),
   ano: z.string().optional(),
-  status: z.enum(["Prenha", "Vazia", "Com cria"]),
-  statusDoCadastro: z.enum(["Ativo", "Inativo"]),
 });
 export type Cow = z.infer<typeof CowSchema>;
+
 
 // Esquema para o Registro de Nascimento
 export const BirthSchema = z.object({
@@ -59,4 +61,3 @@ export type DisposalReason = z.infer<typeof DisposalReasonSchema>;
 
 export type Item = { id: string; name: string };
 export type Category = "lots" | "pastures" | "farms" | "breeds";
-
