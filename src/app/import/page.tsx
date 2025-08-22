@@ -125,7 +125,7 @@ export default function ImportPage() {
     }
     setIsLoadingImport(true);
 
-    const headers = previewData.headers.map(h => h.toLowerCase().trim());
+    const headers = previewData.headers.map(h => h ? String(h).toLowerCase().trim() : "");
     
     let importedCount = 0;
     let errorCount = 0;
@@ -153,27 +153,27 @@ export default function ImportPage() {
 
             if (importType === 'vacas') {
                 const cow = CowSchema.parse({
-                    id: String(rowData['brinco nº'] || rowData['brinco']),
-                    animal: String(rowData['animal']),
-                    origem: String(rowData['origem']),
-                    farm: String(rowData['fazenda']),
-                    lot: String(rowData['lote']),
-                    location: String(rowData['localização']),
-                    status: String(rowData['status']),
+                    id: String(rowData['brinco nº'] || rowData['brinco'] || ''),
+                    animal: String(rowData['animal'] || ''),
+                    origem: String(rowData['origem'] || ''),
+                    farm: String(rowData['fazenda'] || ''),
+                    lot: String(rowData['lote'] || ''),
+                    location: String(rowData['localização'] || ''),
+                    status: String(rowData['status'] || 'Vazia'), // Default to 'Vazia' if null/undefined
                     registrationStatus: String(rowData['status do cadastro'] || 'Ativo'),
                 });
                 addCow(cow);
                 importedCount++;
             } else if (importType === 'nascimentos') {
                 const birth = BirthSchema.parse({
-                    cowId: String(rowData['brinco nº (mãe)'] || rowData['brinco mae']),
+                    cowId: String(rowData['brinco nº (mãe)'] || rowData['brinco mae'] || ''),
                     date: new Date(rowData['data de nascimento']),
-                    sex: String(rowData['sexo do bezerro']),
-                    breed: String(rowData['raça do bezerro']),
-                    sire: String(rowData['nome do pai']),
-                    lot: String(rowData['lote']),
-                    farm: String(rowData['fazenda']),
-                    location: String(rowData['localização']),
+                    sex: String(rowData['sexo do bezerro'] || ''),
+                    breed: String(rowData['raça do bezerro'] || rowData['raça'] || ''),
+                    sire: String(rowData['nome do pai'] || ''),
+                    lot: String(rowData['lote'] || ''),
+                    farm: String(rowData['fazenda'] || ''),
+                    location: String(rowData['localização'] || ''),
                     observations: String(rowData['observações'] || ''),
                 });
                 addBirth(birth);
