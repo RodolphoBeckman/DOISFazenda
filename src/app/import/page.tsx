@@ -62,14 +62,16 @@ export default function ImportPage() {
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
+          // Use `cellDates: true` to help parse dates, but we will double-check.
           const workbook = xlsx.read(data, { type: 'array', cellDates: true });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-          const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: null }) as (string | number | null)[][];
+          // Use raw: false to get formatted strings, but numbers for dates might still occur
+          const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: null, raw: false }) as (string | number | null)[][];
           
           if (jsonData.length > 0) {
             const headers = jsonData[0] as string[];
-            const previewRows = jsonData.slice(1, 4); // Preview first 3 data rows
+            const previewRows = jsonData.slice(1, 4); 
             const fullRows = jsonData.slice(1);
             resolve({ preview: { headers, rows: previewRows }, full: fullRows });
           } else {
@@ -206,8 +208,6 @@ export default function ImportPage() {
           }
         } catch (e) {
             errorCount++;
-            // This will now only log errors for rows that are supposed to be valid, but still fail.
-            // Empty rows will be skipped silently.
             console.error('Validation Error on row:', rowData, e);
         }
     }
@@ -336,5 +336,3 @@ export default function ImportPage() {
     </main>
   );
 }
-
-    
