@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 
 type ParsedData = {
   headers: string[];
-  rows: string[][];
+  rows: (string | number | null)[][];
 };
 
 export default function ImportPage() {
@@ -51,13 +51,13 @@ export default function ImportPage() {
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
-          const workbook = xlsx.read(data, { type: 'binary' });
+          const workbook = xlsx.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-          const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+          const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: null }) as (string | number | null)[][];
           
           if (jsonData.length > 0) {
-            const headers = jsonData[0];
+            const headers = jsonData[0] as string[];
             const rows = jsonData.slice(1, 4); // Preview first 3 data rows
             resolve({ headers, rows });
           } else {
@@ -68,7 +68,7 @@ export default function ImportPage() {
         }
       };
       reader.onerror = (error) => reject(error);
-      reader.readAsBinaryString(file);
+      reader.readAsArrayBuffer(file);
     });
   };
 
@@ -215,7 +215,7 @@ export default function ImportPage() {
                         <TableBody>
                             {previewData.rows.map((row, rowIndex) => (
                                 <TableRow key={rowIndex}>
-                                    {row.map((cell, cellIndex) => <TableCell key={cellIndex}>{cell}</TableCell>)}
+                                    {row.map((cell, cellIndex) => <TableCell key={cellIndex}>{String(cell ?? '')}</TableCell>)}
                                 </TableRow>
                             ))}
                         </TableBody>
