@@ -171,7 +171,7 @@ export default function ImportPage() {
         try {
           if (importType === 'vacas') {
               const cowData: any = {
-                  id: String(getColumnValue(rowData, ['Brinco Nº'])),
+                  id: String(getColumnValue(rowData, ['Brinco Nº']) ?? ''),
                   animal: getColumnValue(rowData, ['Animal']),
                   origem: getColumnValue(rowData, ['Origem']),
                   farm: getColumnValue(rowData, ['Fazenda']),
@@ -186,14 +186,14 @@ export default function ImportPage() {
                   ano: getColumnValue(rowData, ['Ano']),
               };
               
-              if (!cowData.id || cowData.id === 'undefined' || !cowData.animal || !cowData.origem || !cowData.farm || !cowData.lot || !cowData.location || cowData.location === 'undefined') {
+              if (!cowData.id || !cowData.animal || !cowData.origem || !cowData.farm || !cowData.lot || !cowData.location) {
                   errorCount++;
                   continue;
               }
 
               Object.keys(cowData).forEach(key => {
                   if (cowData[key] === undefined) {
-                    cowData[key] = undefined;
+                    (cowData as any)[key] = undefined;
                   }
               });
 
@@ -218,13 +218,12 @@ export default function ImportPage() {
                const rawCowId = getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº']);
                const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
                
-               // Strict check for the most essential fields. If any are missing, skip the row silently.
                if (!rawCowId || !dateValue) {
                   continue; 
                }
 
                let parsedDate;
-               if (typeof dateValue === 'number') { // Handle Excel date serial numbers
+               if (typeof dateValue === 'number') {
                   const excelEpoch = new Date(1899, 11, 30);
                   parsedDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
                } else if (typeof dateValue === 'string') {
@@ -232,7 +231,7 @@ export default function ImportPage() {
                    if (parts.length === 3) {
                       const day = parts[0];
                       const month = parts[1];
-                      const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2]) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
+                      const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2], 10) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
                       const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
                       parsedDate = new Date(isoDateString);
                    } else {
@@ -243,22 +242,13 @@ export default function ImportPage() {
                }
 
                if (!parsedDate || isNaN(parsedDate.getTime())) {
-                   continue; // Skip if date is still invalid
-               }
-
-               const rawBreed = getColumnValue(rowData, ['Raça do Bezerro', 'Raça']);
-               const rawLot = getColumnValue(rowData, ['Lote']);
-               const rawFarm = getColumnValue(rowData, ['Fazenda']);
-               const rawLocation = getColumnValue(rowData, ['Localização', 'Local']);
-
-               // Check other required fields after handling the date
-               if (!rawBreed || !rawLot || !rawFarm || !rawLocation) {
+                   errorCount++;
                    continue;
                }
 
-               let sexValue: 'Macho' | 'Fêmea' | 'Aborto' | undefined = undefined;
                const rawSexValue = getColumnValue(rowData, ['Sexo do Bezerro', 'Sexo']);
-
+               let sexValue: 'Macho' | 'Fêmea' | 'Aborto' | undefined = undefined;
+               
                 if (typeof rawSexValue === 'string' && rawSexValue.trim() !== '') {
                     const lowerSex = rawSexValue.trim().toLowerCase();
                     if (lowerSex.startsWith('f')) {
@@ -274,11 +264,11 @@ export default function ImportPage() {
                   cowId: String(rawCowId),
                   date: parsedDate,
                   sex: sexValue,
-                  breed: rawBreed,
+                  breed: getColumnValue(rowData, ['Raça do Bezerro', 'Raça']),
                   sire: getColumnValue(rowData, ['Nome do Pai']),
-                  lot: rawLot,
-                  farm: rawFarm,
-                  location: rawLocation,
+                  lot: getColumnValue(rowData, ['Lote']),
+                  farm: getColumnValue(rowData, ['Fazenda']),
+                  location: getColumnValue(rowData, ['Localização', 'Local']),
                   observations: getColumnValue(rowData, ['Observações']),
                   obs1: getColumnValue(rowData, ['Obs: 1']),
                   jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
@@ -328,7 +318,7 @@ export default function ImportPage() {
 
     setIsLoadingImport(false);
     
-    if (importedCount > 0) {
+    if (importedCount > 0 || errorCount === 0) {
         toast({
             title: 'Importação Concluída!',
             description: `${importedCount} registros importados com sucesso. ${errorCount > 0 ? `${errorCount} registros com erro.` : ''}`,
