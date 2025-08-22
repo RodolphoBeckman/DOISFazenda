@@ -188,7 +188,7 @@ export default function BirthsPage() {
   }
 
 
-  const farms = Array.from(new Set(allBirths.map(b => b.farm)));
+  const farms = Array.from(new Set(allBirths.map(b => b.farm).filter(Boolean) as string[]));
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -254,7 +254,9 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
                             ? 'destructive'
                             : birth.sex === 'Macho'
                             ? 'secondary'
-                            : 'default'
+                            : birth.sex === 'Fêmea'
+                            ? 'default'
+                            : 'outline'
                         }
                       >
                         {birth.sex}
@@ -263,14 +265,14 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  <TableCell>{birth.breed}</TableCell>
-                  <TableCell>{birth.sire}</TableCell>
-                  <TableCell>{new Date(birth.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</TableCell>
-                  <TableCell>{birth.lot}</TableCell>
+                  <TableCell>{birth.breed || '-'}</TableCell>
+                  <TableCell>{birth.sire || '-'}</TableCell>
+                  <TableCell>{birth.date ? new Date(birth.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'}</TableCell>
+                  <TableCell>{birth.lot || '-'}</TableCell>
                   <TableCell>{birth.obs1 || '-'}</TableCell>
                   <TableCell>{birth.jvvo || '-'}</TableCell>
-                  <TableCell>{birth.farm}</TableCell>
-                  <TableCell>{birth.location}</TableCell>
+                  <TableCell>{birth.farm || '-'}</TableCell>
+                  <TableCell>{birth.location || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

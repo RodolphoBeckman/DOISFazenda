@@ -186,7 +186,7 @@ export default function ImportPage() {
                   ano: getColumnValue(rowData, ['Ano']),
               };
               
-              if (!cowData.id || !cowData.animal || !cowData.origem || !cowData.farm || !cowData.lot || !cowData.location) {
+              if (!cowData.id || !cowData.animal) {
                   errorCount++;
                   continue;
               }
@@ -216,38 +216,40 @@ export default function ImportPage() {
 
           } else if (importType === 'nascimentos') {
                const rawCowId = getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº']);
-               const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
                
-               if (!rawCowId || !dateValue) {
+               if (!rawCowId) {
                   continue; 
                }
-
+               
+               const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
                let parsedDate;
-               if (typeof dateValue === 'number') {
-                  const excelEpoch = new Date(1899, 11, 30);
-                  parsedDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
-               } else if (typeof dateValue === 'string') {
-                   const parts = dateValue.split(/[/.-]/);
-                   if (parts.length === 3) {
-                      const day = parts[0];
-                      const month = parts[1];
-                      const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2], 10) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
-                      const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
-                      parsedDate = new Date(isoDateString);
-                   } else {
-                      parsedDate = new Date(dateValue);
-                   }
-               } else if (dateValue instanceof Date) {
-                  parsedDate = dateValue;
+               if (dateValue) {
+                 if (typeof dateValue === 'number') {
+                    const excelEpoch = new Date(1899, 11, 30);
+                    parsedDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
+                 } else if (typeof dateValue === 'string') {
+                     const parts = dateValue.split(/[/.-]/);
+                     if (parts.length === 3) {
+                        const day = parts[0];
+                        const month = parts[1];
+                        const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2], 10) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
+                        const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
+                        parsedDate = new Date(isoDateString);
+                     } else {
+                        parsedDate = new Date(dateValue);
+                     }
+                 } else if (dateValue instanceof Date) {
+                    parsedDate = dateValue;
+                 }
+
+                 if (!parsedDate || isNaN(parsedDate.getTime())) {
+                     parsedDate = undefined;
+                 }
                }
 
-               if (!parsedDate || isNaN(parsedDate.getTime())) {
-                   errorCount++;
-                   continue;
-               }
 
                const rawSexValue = getColumnValue(rowData, ['Sexo do Bezerro', 'Sexo']);
-               let sexValue: 'Macho' | 'Fêmea' | 'Aborto' | undefined = undefined;
+               let sexValue: 'Macho' | 'Fêmea' | 'Aborto' | 'Não Definido' | undefined = undefined;
                
                 if (typeof rawSexValue === 'string' && rawSexValue.trim() !== '') {
                     const lowerSex = rawSexValue.trim().toLowerCase();
@@ -257,6 +259,8 @@ export default function ImportPage() {
                         sexValue = 'Macho';
                     } else if (lowerSex.startsWith('a')) {
                         sexValue = 'Aborto';
+                    } else if (lowerSex.startsWith('n')) {
+                        sexValue = 'Não Definido'
                     }
                 }
 
