@@ -129,7 +129,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a origem..." />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {origins.map((origin) => (
@@ -152,7 +152,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a fazenda..." />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {farms.map((farm) => (
@@ -175,7 +175,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o lote..." />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {lots.map((lot) => (
@@ -212,7 +212,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o status..." />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {statuses.map(status => (
@@ -234,7 +234,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o status..." />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {registrationStatuses.map(status => (
