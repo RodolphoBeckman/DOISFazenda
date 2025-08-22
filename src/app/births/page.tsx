@@ -269,3 +269,5 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
     </div>
   );
 }
+
+    
