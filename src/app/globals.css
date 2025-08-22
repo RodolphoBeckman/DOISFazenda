@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
+    --background: 60 56% 91%; /* #F5F5DC */
+    --foreground: 20 14% 4%; /* Near black for text */
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card-foreground: 20 14% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --popover-foreground: 20 14% 4%;
+    --primary: 81 33% 60%; /* #A7BE78 */
+    --primary-foreground: 80 60% 10%;
+    --secondary: 60 30% 85%;
+    --secondary-foreground: 80 60% 10%;
+    --muted: 60 30% 85%;
+    --muted-foreground: 60 10% 45%;
+    --accent: 25 57% 40%; /* #A0522D */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
+    --border: 60 20% 75%;
+    --input: 60 20% 80%;
+    --ring: 81 33% 60%;
     --radius: 0.5rem;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -40,25 +40,25 @@
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
+    --background: 20 14% 4%;
+    --foreground: 60 30% 96%;
+    --card: 24 10% 8%;
+    --card-foreground: 60 30% 96%;
+    --popover: 24 10% 8%;
+    --popover-foreground: 60 30% 96%;
+    --primary: 81 33% 60%;
+    --primary-foreground: 80 60% 10%;
+    --secondary: 25 15% 15%;
+    --secondary-foreground: 60 30% 96%;
+    --muted: 25 15% 15%;
+    --muted-foreground: 60 10% 60%;
+    --accent: 25 57% 50%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
+    --border: 25 15% 20%;
+    --input: 25 15% 20%;
+    --ring: 81 33% 60%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 340 80% 55%;
@@ -99,7 +99,7 @@
     background:
       radial-gradient(
         ellipse at 20% 80%,
-        hsl(var(--chart-1) / 0.5),
+        hsl(var(--primary) / 0.5),
         transparent 50%
       ),
       radial-gradient(
@@ -109,7 +109,7 @@
       ),
       radial-gradient(
         ellipse at 90% 90%,
-        hsl(var(--chart-3) / 0.5),
+        hsl(var(--accent) / 0.5),
         transparent 50%
       );
     animation: aurora-animation 15s infinite alternate;
