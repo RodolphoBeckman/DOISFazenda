@@ -141,48 +141,69 @@ export default function ImportPage() {
         });
         
         try {
-            // Auto-add settings
-            const newFarm = rowData['fazenda'];
-            if (newFarm && !settings.farms.some(f => f.name === newFarm)) {
-                addSettingItem('farms', { id: crypto.randomUUID(), name: newFarm });
-            }
-            const newLot = rowData['lote'];
-            if (newLot && !settings.lots.some(l => l.name === newLot)) {
-                addSettingItem('lots', { id: crypto.randomUUID(), name: newLot });
-            }
-            const newBreed = rowData['raça'] || rowData['raça do bezerro'];
-            if (newBreed && !settings.breeds.some(b => b.name === newBreed)) {
-                 addSettingItem('breeds', { id: crypto.randomUUID(), name: newBreed });
-            }
+          if (importType === 'vacas') {
+              const cowData = {
+                  id: String(rowData['brinco nº'] || rowData['brinco'] || ''),
+                  animal: String(rowData['animal'] || ''),
+                  origem: String(rowData['origem'] || ''),
+                  farm: String(rowData['fazenda'] || ''),
+                  lot: String(rowData['lote'] || ''),
+                  location: String(rowData['localização'] || ''),
+                  status: String(rowData['status'] || 'Vazia'),
+                  registrationStatus: String(rowData['status do cadastro'] || 'Ativo'),
+              };
+              
+              if (!cowData.id || !cowData.animal || !cowData.location) {
+                  continue;
+              }
 
-            if (importType === 'vacas') {
-                const cow = CowSchema.parse({
-                    id: String(rowData['brinco nº'] || rowData['brinco'] || ''),
-                    animal: String(rowData['animal'] || ''),
-                    origem: String(rowData['origem'] || ''),
-                    farm: String(rowData['fazenda'] || ''),
-                    lot: String(rowData['lote'] || ''),
-                    location: String(rowData['localização'] || ''),
-                    status: String(rowData['status'] || 'Vazia'),
-                    registrationStatus: String(rowData['status do cadastro'] || 'Ativo'),
-                });
-                addCow(cow);
-                importedCount++;
-            } else if (importType === 'nascimentos') {
-                const birth = BirthSchema.parse({
-                    cowId: String(rowData['brinco nº (mãe)'] || rowData['brinco mae'] || ''),
-                    date: new Date(rowData['data de nascimento']),
-                    sex: String(rowData['sexo do bezerro'] || ''),
-                    breed: String(rowData['raça do bezerro'] || rowData['raça'] || ''),
-                    sire: String(rowData['nome do pai'] || ''),
-                    lot: String(rowData['lote'] || ''),
-                    farm: String(rowData['fazenda'] || ''),
-                    location: String(rowData['localização'] || ''),
-                    observations: String(rowData['observações'] || ''),
-                });
-                addBirth(birth);
-                importedCount++;
-            }
+              const newFarm = cowData.farm;
+              if (newFarm && !settings.farms.some(f => f.name === newFarm)) {
+                  addSettingItem('farms', { id: crypto.randomUUID(), name: newFarm });
+              }
+              const newLot = cowData.lot;
+              if (newLot && !settings.lots.some(l => l.name === newLot)) {
+                  addSettingItem('lots', { id: crypto.randomUUID(), name: newLot });
+              }
+
+              const cow = CowSchema.parse(cowData);
+              addCow(cow);
+              importedCount++;
+
+          } else if (importType === 'nascimentos') {
+              const birthData = {
+                  cowId: String(rowData['brinco nº (mãe)'] || rowData['brinco mae'] || ''),
+                  date: rowData['data de nascimento'] ? new Date(rowData['data de nascimento']) : undefined,
+                  sex: String(rowData['sexo do bezerro'] || ''),
+                  breed: String(rowData['raça do bezerro'] || rowData['raça'] || ''),
+                  sire: String(rowData['nome do pai'] || ''),
+                  lot: String(rowData['lote'] || ''),
+                  farm: String(rowData['fazenda'] || ''),
+                  location: String(rowData['localização'] || ''),
+                  observations: String(rowData['observações'] || ''),
+              }
+
+              if (!birthData.cowId || !birthData.date || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
+                  continue;
+              }
+              
+              const newFarm = birthData.farm;
+              if (newFarm && !settings.farms.some(f => f.name === newFarm)) {
+                  addSettingItem('farms', { id: crypto.randomUUID(), name: newFarm });
+              }
+              const newLot = birthData.lot;
+              if (newLot && !settings.lots.some(l => l.name === newLot)) {
+                  addSettingItem('lots', { id: crypto.randomUUID(), name: newLot });
+              }
+              const newBreed = birthData.breed;
+              if (newBreed && !settings.breeds.some(b => b.name === newBreed)) {
+                   addSettingItem('breeds', { id: crypto.randomUUID(), name: newBreed });
+              }
+
+              const birth = BirthSchema.parse(birthData);
+              addBirth(birth);
+              importedCount++;
+          }
         } catch (e) {
             errorCount++;
             // This will now only log errors for rows that are supposed to be valid, but still fail.
@@ -202,7 +223,7 @@ export default function ImportPage() {
          toast({
             variant: 'destructive',
             title: 'Nenhum registro importado.',
-            description: `Verifique se as colunas do arquivo correspondem ao esperado. ${errorCount} registros com erro.`,
+            description: `Verifique se as colunas do arquivo correspondem ao esperado ou se os dados obrigatórios estão preenchidos. ${errorCount > 0 ? `${errorCount} registros com erro.` : ''}`,
         });
     }
 
@@ -315,3 +336,5 @@ export default function ImportPage() {
     </main>
   );
 }
+
+    
