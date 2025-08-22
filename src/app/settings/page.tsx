@@ -32,9 +32,19 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/contexts/settings-context";
 import { type Item, type Category } from "@/lib/data-schemas";
@@ -48,9 +58,11 @@ const categoryLabels: Record<Category, { singular: string; plural: string }> = {
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { settings, addSettingItem } = useSettings();
+  const { settings, addSettingItem, deleteSettingItem } = useSettings();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ category: Category; itemId: string; itemName: string } | null>(null);
   const [dialogCategory, setDialogCategory] = useState<Category | null>(null);
   const [newItemName, setNewItemName] = useState("");
   const [isClient, setIsClient] = useState(false);
@@ -58,7 +70,6 @@ export default function SettingsPage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
 
   const handleOpenDialog = (category: Category) => {
     setDialogCategory(category);
@@ -77,6 +88,25 @@ export default function SettingsPage() {
     });
 
     setIsDialogOpen(false);
+  };
+  
+  const openDeleteConfirmDialog = (category: Category, itemId: string, itemName: string) => {
+    setItemToDelete({ category, itemId, itemName });
+    setIsAlertOpen(true);
+  };
+
+  const handleDeleteItem = () => {
+    if (!itemToDelete) return;
+
+    deleteSettingItem(itemToDelete.category, itemToDelete.itemId);
+
+    toast({
+      title: "Item Excluído",
+      description: `O item "${itemToDelete.itemName}" foi removido com sucesso.`,
+    });
+
+    setIsAlertOpen(false);
+    setItemToDelete(null);
   };
 
   const renderTable = (category: Category) => {
@@ -97,7 +127,7 @@ export default function SettingsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome do {labels.singular}</TableHead>
-                <TableHead className="w-[100px]">Ações</TableHead>
+                <TableHead className="w-[100px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -105,8 +135,15 @@ export default function SettingsPage() {
                 items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell>
-                      {/* Ações como Editar/Excluir podem ser adicionadas aqui */}
+                    <TableCell className="text-right">
+                       <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openDeleteConfirmDialog(category, item.id, item.name)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Excluir</span>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -181,6 +218,22 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o item
+              <span className="font-bold"> "{itemToDelete?.itemName}"</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setItemToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteItem}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

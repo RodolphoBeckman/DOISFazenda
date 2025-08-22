@@ -14,6 +14,7 @@ interface Settings {
 interface SettingsContextType {
   settings: Settings;
   addSettingItem: (category: Category, item: Item) => void;
+  deleteSettingItem: (category: Category, itemId: string) => void;
 }
 
 const SETTINGS_STORAGE_KEY = 'cattleLifeSettings';
@@ -97,8 +98,15 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const deleteSettingItem = (category: Category, itemId: string) => {
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      [category]: prevSettings[category].filter(item => item.id !== itemId),
+    }));
+  };
+
   return (
-    <SettingsContext.Provider value={{ settings, addSettingItem }}>
+    <SettingsContext.Provider value={{ settings, addSettingItem, deleteSettingItem }}>
       {children}
     </SettingsContext.Provider>
   );
