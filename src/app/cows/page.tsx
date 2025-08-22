@@ -193,7 +193,8 @@ export default function CowsPage() {
         </h1>
         <Button asChild>
             <Link href="/cows/new">
-              <PlusCircle /> Nova Vaca
+              <PlusCircle /> 
+              <span>Nova Vaca</span>
             </Link>
           </Button>
       </div>
