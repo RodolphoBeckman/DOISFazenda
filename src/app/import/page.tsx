@@ -62,11 +62,9 @@ export default function ImportPage() {
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
-          // Use `cellDates: true` to help parse dates, but we will double-check.
           const workbook = xlsx.read(data, { type: 'array', cellDates: true });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-          // Use raw: false to get formatted strings, but numbers for dates might still occur
           const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: null, raw: false }) as (string | number | null)[][];
           
           if (jsonData.length > 0) {
@@ -127,14 +125,14 @@ export default function ImportPage() {
     }
     setIsLoadingImport(true);
 
-    const headers = previewData.headers.map(h => h ? String(h).toLowerCase().trim() : "");
+    const headers = previewData.headers.map(h => h ? String(h).trim() : "");
     
     let importedCount = 0;
     let errorCount = 0;
 
     for (const row of fullData) {
         if (!row || row.every(cell => cell === null || cell === '')) {
-            continue; // Skip empty rows
+            continue; 
         }
 
         const rowData: { [key: string]: any } = {};
@@ -145,14 +143,14 @@ export default function ImportPage() {
         try {
           if (importType === 'vacas') {
               const cowData = {
-                  id: String(rowData['brinco nº'] || rowData['brinco'] || ''),
-                  animal: String(rowData['animal'] || ''),
-                  origem: String(rowData['origem'] || ''),
-                  farm: String(rowData['fazenda'] || ''),
-                  lot: String(rowData['lote'] || ''),
-                  location: String(rowData['localização'] || ''),
-                  status: String(rowData['status'] || 'Vazia'),
-                  registrationStatus: String(rowData['status do cadastro'] || 'Ativo'),
+                  id: String(rowData['Brinco Nº'] || ''),
+                  animal: String(rowData['Animal'] || ''),
+                  origem: String(rowData['Origem'] || ''),
+                  farm: String(rowData['Fazenda'] || ''),
+                  lot: String(rowData['Lote'] || ''),
+                  location: String(rowData['Localização'] || ''),
+                  status: String(rowData['Status'] || 'Vazia'),
+                  registrationStatus: String(rowData['Status do Cadastro'] || 'Ativo'),
               };
               
               if (!cowData.id || !cowData.animal || !cowData.location) {
@@ -174,15 +172,15 @@ export default function ImportPage() {
 
           } else if (importType === 'nascimentos') {
                const birthData = {
-                  cowId: String(rowData['brinco nº'] || ''),
-                  date: rowData['data nascimento'] ? new Date(rowData['data nascimento']) : undefined,
-                  sex: String(rowData['sexo do bezerro'] || ''),
-                  breed: String(rowData['raça do bezerro'] || ''),
-                  sire: String(rowData['nome do pai'] || ''),
-                  lot: String(rowData['lote'] || ''),
-                  farm: String(rowData['fazenda'] || ''),
-                  location: String(rowData['localização'] || ''),
-                  observations: String(rowData['obs: 1'] || rowData['observações'] || ''),
+                  cowId: String(rowData['Brinco Nº (Mãe)'] || ''),
+                  date: rowData['Data Nascim.'] ? new Date(rowData['Data Nascim.']) : undefined,
+                  sex: String(rowData['Sexo do Bezerro'] || ''),
+                  breed: String(rowData['Raça do Bezerro'] || ''),
+                  sire: String(rowData['Nome do Pai'] || ''),
+                  lot: String(rowData['Lote'] || ''),
+                  farm: String(rowData['Fazenda'] || ''),
+                  location: String(rowData['Localização'] || ''),
+                  observations: String(rowData['Observações'] || ''),
               }
 
               if (!birthData.cowId || !birthData.date || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
@@ -227,7 +225,6 @@ export default function ImportPage() {
         });
     }
 
-    // Reset state
     setFile(null);
     setImportType("");
     setShowPreview(false);
