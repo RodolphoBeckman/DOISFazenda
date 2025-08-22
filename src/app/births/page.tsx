@@ -39,7 +39,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2, Send } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2, Send, GitCommitVertical, GitBranch, XCircle, HelpCircle } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import type { Birth } from '@/lib/data-schemas';
 import { useData } from '@/contexts/data-context';
@@ -48,6 +48,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import EditBirthDialog from '@/components/edit-birth-dialog';
 import BulkUpdateBirthDialog from '@/components/bulk-update-birth-dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ColumnKey = keyof Birth | 'id';
 type SortDirection = 'asc' | 'desc' | null;
@@ -72,6 +73,15 @@ export default function BirthsPage() {
   const [birthToTransfer, setBirthToTransfer] = React.useState<Birth | null>(null);
   const [isTransferAlertOpen, setIsTransferAlertOpen] = React.useState(false);
   const [selectedBirth, setSelectedBirth] = React.useState<Birth | null>(null);
+
+  const sexCounts = React.useMemo(() => {
+    return allBirths.reduce((acc, birth) => {
+      const sex = birth.sex || 'Não Definido';
+      acc[sex] = (acc[sex] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [allBirths]);
+
 
   React.useEffect(() => {
     setIsClient(true);
@@ -318,6 +328,49 @@ export default function BirthsPage() {
         </div>
       </div>
       
+       <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Machos</CardTitle>
+            <GitCommitVertical className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{sexCounts['Macho'] || 0}</div>
+            <p className="text-xs text-muted-foreground">Total de bezerros machos</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Fêmeas</CardTitle>
+            <GitBranch className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{sexCounts['Fêmea'] || 0}</div>
+             <p className="text-xs text-muted-foreground">Total de bezerras fêmeas</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Abortos</CardTitle>
+            <XCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{sexCounts['Aborto'] || 0}</div>
+            <p className="text-xs text-muted-foreground">Total de perdas registradas</p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sexo Não Definido</CardTitle>
+            <HelpCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{sexCounts['Não Definido'] || 0}</div>
+            <p className="text-xs text-muted-foreground">Total de registros sem sexo</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {isClient && (
       <Tabs defaultValue="all">
         <TabsList>
@@ -523,5 +576,7 @@ function CardWithTable({ title, data, allData, renderFilterableHeader, onEditCli
     </div>
   );
 }
+
+    
 
     
