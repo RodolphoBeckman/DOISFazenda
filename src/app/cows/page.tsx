@@ -179,9 +179,9 @@ export default function CowsPage() {
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuSeparator />
                 <div className="max-h-40 overflow-y-auto">
-                    {uniqueValues.map(value => (
+                    {uniqueValues.map((value, index) => (
                         <DropdownMenuCheckboxItem
-                        key={String(value)}
+                        key={`${String(value)}-${index}`}
                         checked={filters[column].includes(String(value))}
                         onCheckedChange={() => handleFilterChange(column, String(value))}
                         >
