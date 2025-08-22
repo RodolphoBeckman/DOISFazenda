@@ -197,14 +197,13 @@ export default function ImportPage() {
                const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
                let parsedDate;
                if (typeof dateValue === 'string') {
-                 // Attempt to parse dates that might be in DD/MM/YYYY format or other non-ISO formats
                  const parts = dateValue.split(/[/.-]/);
                  if (parts.length === 3) {
-                    // Assuming DD/MM/YYYY or YYYY-MM-DD
                     const year = parts[2].length === 4 ? parts[2] : parts[0];
                     const day = parts[2].length === 4 ? parts[0] : parts[2];
                     const month = parts[1];
-                    parsedDate = new Date(`${year}-${month}-${day}T00:00:00`);
+                    const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00`;
+                    parsedDate = new Date(isoDateString);
                  } else {
                     parsedDate = new Date(dateValue);
                  }
@@ -217,13 +216,22 @@ export default function ImportPage() {
 
                if (isNaN(parsedDate.getTime())) {
                   errorCount++;
-                  continue; // Skip if date is invalid
+                  continue; 
                }
 
+               let sexValue = getColumnValue(rowData, ['Sexo do Bezerro']);
+               if (typeof sexValue === 'string') {
+                    const lowerSex = sexValue.toLowerCase();
+                    if (lowerSex.startsWith('f')) {
+                        sexValue = 'Fêmea';
+                    } else if (lowerSex.startsWith('m')) {
+                        sexValue = 'Macho';
+                    }
+               }
 
                const birthData = {
                   cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
-                  sex: getColumnValue(rowData, ['Sexo do Bezerro']),
+                  sex: sexValue,
                   breed: getColumnValue(rowData, ['Raça do Bezerro']),
                   sire: getColumnValue(rowData, ['Nome do Pai']),
                   lot: getColumnValue(rowData, ['Lote']),
@@ -234,7 +242,6 @@ export default function ImportPage() {
                   jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
               };
                
-              // Clean up undefined/null values before validation
               Object.keys(birthData).forEach(key => {
                   const typedKey = key as keyof typeof birthData;
                   if (birthData[typedKey] === null) {
@@ -403,3 +410,5 @@ export default function ImportPage() {
     </main>
   );
 }
+
+    
