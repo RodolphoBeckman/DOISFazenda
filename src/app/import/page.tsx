@@ -197,9 +197,10 @@ export default function ImportPage() {
               importedCount++;
 
           } else if (importType === 'nascimentos') {
+               const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
                const birthData = {
                   cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
-                  date: getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']),
+                  date: dateValue ? new Date(dateValue) : undefined,
                   sex: getColumnValue(rowData, ['Sexo do Bezerro']),
                   breed: getColumnValue(rowData, ['Raça do Bezerro']),
                   sire: getColumnValue(rowData, ['Nome do Pai']),
@@ -211,12 +212,18 @@ export default function ImportPage() {
                   jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
               }
 
+              Object.keys(birthData).forEach(key => {
+                  if (birthData[key as keyof typeof birthData] === null) {
+                      (birthData as any)[key] = undefined;
+                  }
+              });
+
               if (!birthData.cowId || !birthData.date || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
                   continue;
               }
               
               // Check for duplicates before adding (e.g., same cowId on the same date)
-              if (births.some(b => b.cowId.trim().toLowerCase() === birthData.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === new Date(birthData.date).toDateString())) {
+              if (births.some(b => b.cowId.trim().toLowerCase() === birthData.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === new Date(birthData.date!).toDateString())) {
                 continue; // Skip if birth for this cow on this date already exists
               }
 
@@ -309,7 +316,7 @@ export default function ImportPage() {
             </div>
             )}
 
-        </CardContent>
+        </CardFooter>
         <CardFooter className="flex justify-end gap-2 border-t pt-6">
             <Button onClick={handlePreview} variant="outline" disabled={!file || !importType || isLoadingPreview || isLoadingImport}>
                 {isLoadingPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
@@ -368,3 +375,5 @@ export default function ImportPage() {
     </main>
   );
 }
+
+    
