@@ -144,13 +144,17 @@ export default function ImportPage() {
     
     const getColumnValue = (rowObject: {[key: string]: any}, keys: string[]): any => {
         for (const key of keys) {
-            const keyVariations = [key, key.toLowerCase(), key.replace(/\s/g, ''), key.normalize("NFD").replace(/[\u0300-\u036f]/g, "")];
+            const keyVariations = [
+                key, 
+                key.toLowerCase(), 
+                key.replace(/\s/g, ''), 
+                key.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            ];
             for (const variation of keyVariations) {
                  if (rowObject.hasOwnProperty(variation)) {
                     return rowObject[variation];
                  }
             }
-            // Check for case-insensitive and variation matches in the rowObject keys
             for (const rowKey in rowObject) {
                  const normalizedRowKey = rowKey.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                  const normalizedKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -250,18 +254,18 @@ export default function ImportPage() {
                let sexValue: 'Macho' | 'Fêmea' | 'Aborto' | undefined = undefined;
                const rawSexValue = getColumnValue(rowData, ['Sexo do Bezerro']);
 
-               if (typeof rawSexValue === 'string' && rawSexValue.trim() !== '') {
-                  const lowerSex = rawSexValue.trim().toLowerCase();
-                  if (lowerSex.startsWith('f')) {
-                      sexValue = 'Fêmea';
-                  } else if (lowerSex.startsWith('m')) {
-                      sexValue = 'Macho';
-                  } else if (lowerSex.startsWith('a')) {
-                      sexValue = 'Aborto';
-                  }
-               }
+                if (typeof rawSexValue === 'string' && rawSexValue.trim() !== '') {
+                    const lowerSex = rawSexValue.trim().toLowerCase();
+                    if (lowerSex.startsWith('f')) {
+                        sexValue = 'Fêmea';
+                    } else if (lowerSex.startsWith('m')) {
+                        sexValue = 'Macho';
+                    } else if (lowerSex.startsWith('a')) {
+                        sexValue = 'Aborto';
+                    }
+                }
 
-               const birthData = {
+               const birthData: Partial<Birth> = {
                   cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
                   sex: sexValue,
                   breed: getColumnValue(rowData, ['Raça do Bezerro']),
@@ -280,7 +284,7 @@ export default function ImportPage() {
                       (birthData as any)[typedKey] = undefined;
                   }
               });
-
+              
               if (!birthData.cowId || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location || birthData.cowId === 'undefined') {
                   errorCount++;
                   continue;
@@ -468,7 +472,7 @@ export default function ImportPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</Button>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={() => {
               setIsAlertOpen(false);
               handleImport();
@@ -481,5 +485,3 @@ export default function ImportPage() {
     </>
   );
 }
-
-    
