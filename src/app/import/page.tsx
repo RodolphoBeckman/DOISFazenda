@@ -198,8 +198,8 @@ export default function ImportPage() {
 
           } else if (importType === 'nascimentos') {
                const birthData = {
-                  cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)'])),
-                  date: getColumnValue(rowData, ['Data Nascimento']),
+                  cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
+                  date: getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']),
                   sex: getColumnValue(rowData, ['Sexo do Bezerro']),
                   breed: getColumnValue(rowData, ['Raça do Bezerro']),
                   sire: getColumnValue(rowData, ['Nome do Pai']),
@@ -208,7 +208,7 @@ export default function ImportPage() {
                   location: getColumnValue(rowData, ['Localização']),
                   observations: getColumnValue(rowData, ['Observações']),
                   obs1: getColumnValue(rowData, ['Obs: 1']),
-                  jvvo: getColumnValue(rowData, ['JV - Vo']),
+                  jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
               }
 
               if (!birthData.cowId || !birthData.date || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
