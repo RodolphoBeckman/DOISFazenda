@@ -47,6 +47,12 @@ export default function CowsPage() {
   const [searchTerms, setSearchTerms] = React.useState<Record<ColumnKey, string>>({
     id: '', animal: '', origem: '', farm: '', lot: '', location: '', status: '', registrationStatus: '', loteT: '', obs1: '', motivoDoDescarte: '', mes: '', ano: ''
   });
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const handleFilterChange = (column: ColumnKey, value: string) => {
     setFilters(prev => {
@@ -99,7 +105,7 @@ export default function CowsPage() {
     const uniqueValues = Array.from(new Set(dataSet.map(item => item[column]))).sort();
     if (!searchTerm) return uniqueValues;
     // @ts-ignore
-    return uniqueValues.filter(value => value.toLowerCase().includes(searchTerm));
+    return uniqueValues.filter(value => String(value).toLowerCase().includes(searchTerm));
   };
   
   const clearFilter = (column: ColumnKey) => {
@@ -107,7 +113,7 @@ export default function CowsPage() {
   };
 
   const selectAll = (column: ColumnKey, allValues: string[]) => {
-    setFilters(prev => ({ ...prev, [column]: allValues }));
+    setFilters(prev => ({ ...prev, [column]: allValues.map(v => String(v)) }));
   }
 
   const renderFilterableHeader = (column: ColumnKey, label: string) => {
@@ -156,6 +162,7 @@ export default function CowsPage() {
                         if (filters[column].length === allUniqueValuesForSelectAll.length) {
                             clearFilter(column);
                         } else {
+                            // @ts-ignore
                             selectAll(column, allUniqueValuesForSelectAll);
                         }
                     }}
@@ -170,10 +177,9 @@ export default function CowsPage() {
                         key={value}
                         // @ts-ignore
                         checked={filters[column].includes(value)}
-                        // @ts-ignore
-                        onCheckedChange={() => handleFilterChange(column, value)}
+                        onCheckedChange={() => handleFilterChange(column, String(value))}
                         >
-                        {value || '(Vazio)'}
+                        {String(value) || '(Vazio)'}
                         </DropdownMenuCheckboxItem>
                     ))}
                 </div>
@@ -199,7 +205,7 @@ export default function CowsPage() {
           </Button>
       </div>
      
-
+      {isClient && (
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">Todas</TabsTrigger>
@@ -222,6 +228,7 @@ export default function CowsPage() {
             </TabsContent>
         ))}
       </Tabs>
+      )}
     </main>
   );
 }
