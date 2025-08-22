@@ -172,6 +172,7 @@ export default function ImportPage() {
               }
               
               if (!cowData.id || !cowData.animal || !cowData.location) {
+                  errorCount++;
                   continue;
               }
               
@@ -194,9 +195,34 @@ export default function ImportPage() {
 
           } else if (importType === 'nascimentos') {
                const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
+               let parsedDate;
+               if (typeof dateValue === 'string') {
+                 // Attempt to parse dates that might be in DD/MM/YYYY format or other non-ISO formats
+                 const parts = dateValue.split(/[/.-]/);
+                 if (parts.length === 3) {
+                    // Assuming DD/MM/YYYY or YYYY-MM-DD
+                    const year = parts[2].length === 4 ? parts[2] : parts[0];
+                    const day = parts[2].length === 4 ? parts[0] : parts[2];
+                    const month = parts[1];
+                    parsedDate = new Date(`${year}-${month}-${day}T00:00:00`);
+                 } else {
+                    parsedDate = new Date(dateValue);
+                 }
+               } else if (dateValue instanceof Date) {
+                  parsedDate = dateValue;
+               } else {
+                  errorCount++;
+                  continue;
+               }
+
+               if (isNaN(parsedDate.getTime())) {
+                  errorCount++;
+                  continue; // Skip if date is invalid
+               }
+
+
                const birthData = {
                   cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
-                  date: dateValue,
                   sex: getColumnValue(rowData, ['Sexo do Bezerro']),
                   breed: getColumnValue(rowData, ['Raça do Bezerro']),
                   sire: getColumnValue(rowData, ['Nome do Pai']),
@@ -208,20 +234,18 @@ export default function ImportPage() {
                   jvvo: getColumnValue(rowData, ['JV - Vo', 'JV - Võ']),
               };
                
+              // Clean up undefined/null values before validation
               Object.keys(birthData).forEach(key => {
                   if (birthData[key as keyof typeof birthData] === null) {
                       (birthData as any)[key] = undefined;
                   }
               });
 
-              if (!birthData.cowId || !birthData.date || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
+              if (!birthData.cowId || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
+                  errorCount++;
                   continue;
               }
 
-               const parsedDate = new Date(birthData.date);
-               if (isNaN(parsedDate.getTime())) {
-                   continue;
-               }
 
               if (births.some(b => b.cowId.trim().toLowerCase() === birthData.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === parsedDate.toDateString())) {
                 continue;
