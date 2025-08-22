@@ -26,7 +26,7 @@ export const BirthSchema = z.object({
   cowId: z.string({ required_error: "Selecione a vaca." }),
   date: z.date({ required_error: "A data de nascimento é obrigatória." }).optional(),
   sex: z.enum(["Macho", "Fêmea", "Aborto", "Não Definido"]).optional(),
-  breed: z.string().min(1, 'A raça é obrigatória.'),
+  breed: z.string().optional(),
   sire: z.string().optional(),
   lot: z.string().min(1, 'O lote é obrigatório.'),
   farm: z.string().min(1, 'A fazenda é obrigatória.'),
