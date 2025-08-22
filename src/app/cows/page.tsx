@@ -260,15 +260,14 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { ti
                 {renderFilterableHeader('id', 'Brinco Nº')}
                 {renderFilterableHeader('animal', 'Animal')}
                 {renderFilterableHeader('origem', 'Origem')}
-                {renderFilterableHeader('farm', 'Fazenda')}
                 {renderFilterableHeader('lot', 'Lote')}
-                {renderFilterableHeader('location', 'Localização')}
-                {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
-                {renderFilterableHeader('loteT', 'Lote T.')}
                 {renderFilterableHeader('obs1', 'Obs: 1')}
+                {renderFilterableHeader('farm', 'Fazenda')}
+                {renderFilterableHeader('location', 'Localização')}
                 {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
                 {renderFilterableHeader('mes', 'Mês')}
                 {renderFilterableHeader('ano', 'Ano')}
+                {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -277,9 +276,13 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { ti
                   <TableCell className="font-medium">{cow.id}</TableCell>
                   <TableCell>{cow.animal}</TableCell>
                   <TableCell>{cow.origem}</TableCell>
-                  <TableCell>{cow.farm}</TableCell>
                   <TableCell>{cow.lot}</TableCell>
+                  <TableCell>{cow.obs1 || '-'}</TableCell>
+                  <TableCell>{cow.farm}</TableCell>
                   <TableCell>{cow.location}</TableCell>
+                  <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
+                  <TableCell>{cow.mes || '-'}</TableCell>
+                  <TableCell>{cow.ano || '-'}</TableCell>
                   <TableCell>
                    <Badge
                       variant={
@@ -292,11 +295,6 @@ function CardWithTable({ title, data, renderFilterableHeader, onRowClick }: { ti
                       {cow.registrationStatus}
                     </Badge>
                   </TableCell>
-                  <TableCell>{cow.loteT || '-'}</TableCell>
-                  <TableCell>{cow.obs1 || '-'}</TableCell>
-                  <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
-                  <TableCell>{cow.mes || '-'}</TableCell>
-                  <TableCell>{cow.ano || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
