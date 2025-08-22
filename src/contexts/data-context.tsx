@@ -19,6 +19,7 @@ interface DataContextType {
   addBirth: (birth: Birth) => void;
   updateBirth: (birthId: string, updatedBirth: Birth) => void;
   deleteBirth: (birthId: string) => void;
+  transferBirthToCow: (birth: Birth) => void;
   updateBirthsLotAndSex: (birthIds: string[], newLot: string | undefined, newSex: 'Macho' | 'Fêmea' | 'Aborto' | 'Não Definido' | undefined) => void;
   replaceCows: (newCows: Cow[]) => void;
   replaceBirths: (newBirths: Birth[]) => void;
@@ -134,6 +135,34 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           births: prevData.births.filter(b => b.id !== birthId),
       }));
   };
+  
+  const transferBirthToCow = (birth: Birth) => {
+    setData(prevData => {
+      if (!birth.id) return prevData;
+
+      // Crie um novo ID para o bezerro se necessário ou use um novo brinco
+      const newCowId = `FILHA DA ${birth.cowId}`;
+
+      const newCow: Cow = {
+        id: newCowId, // Este deve ser um novo brinco único
+        animal: `Bezerra de ${birth.cowId}`, // Nome inicial
+        origem: "Nascimento",
+        farm: birth.farm || '',
+        lot: birth.lot || '',
+        location: birth.location || '',
+        status: "Vazia",
+        registrationStatus: "Ativo",
+      };
+      
+      const newCows = [...prevData.cows, newCow];
+      const newBirths = prevData.births.filter(b => b.id !== birth.id);
+
+      return {
+        cows: newCows,
+        births: newBirths,
+      };
+    });
+  };
 
   const updateBirthsLotAndSex = (birthIds: string[], newLot: string | undefined, newSex: 'Macho' | 'Fêmea' | 'Aborto' | 'Não Definido' | undefined) => {
     setData(prevData => ({
@@ -181,6 +210,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       addBirth,
       updateBirth,
       deleteBirth,
+      transferBirthToCow,
       updateBirthsLotAndSex,
       replaceCows,
       replaceBirths

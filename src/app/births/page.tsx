@@ -39,7 +39,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2 } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2, Send } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import type { Birth } from '@/lib/data-schemas';
 import { useData } from '@/contexts/data-context';
@@ -53,7 +53,7 @@ type ColumnKey = keyof Birth | 'id';
 type SortDirection = 'asc' | 'desc' | null;
 
 export default function BirthsPage() {
-  const { births: allBirths, deleteBirth } = useData();
+  const { births: allBirths, deleteBirth, transferBirthToCow } = useData();
   const { toast } = useToast();
   const [isClient, setIsClient] = React.useState(false);
   const [filters, setFilters] = React.useState<Record<string, string[]>>({
@@ -69,6 +69,8 @@ export default function BirthsPage() {
   const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = React.useState(false);
   const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [birthToDelete, setBirthToDelete] = React.useState<Birth | null>(null);
+  const [birthToTransfer, setBirthToTransfer] = React.useState<Birth | null>(null);
+  const [isTransferAlertOpen, setIsTransferAlertOpen] = React.useState(false);
   const [selectedBirth, setSelectedBirth] = React.useState<Birth | null>(null);
 
   React.useEffect(() => {
@@ -84,6 +86,11 @@ export default function BirthsPage() {
     setBirthToDelete(birth);
     setIsAlertOpen(true);
   };
+  
+  const handleTransferClick = (birth: Birth) => {
+    setBirthToTransfer(birth);
+    setIsTransferAlertOpen(true);
+  };
 
   const handleConfirmDelete = () => {
     if (birthToDelete?.id) {
@@ -96,6 +103,19 @@ export default function BirthsPage() {
       setBirthToDelete(null);
     }
   };
+
+  const handleConfirmTransfer = () => {
+    if (birthToTransfer) {
+      transferBirthToCow(birthToTransfer);
+      toast({
+        title: "Bezerra Transferida!",
+        description: `A bezerra da vaca ${birthToTransfer.cowId} foi adicionada ao rebanho de vacas.`,
+      });
+    }
+    setIsTransferAlertOpen(false);
+    setBirthToTransfer(null);
+  };
+
 
   const handleSelectBirth = (birthId: string | undefined) => {
     if (!birthId) return;
@@ -314,6 +334,7 @@ export default function BirthsPage() {
               renderFilterableHeader={renderFilterableHeader}
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
+              onTransferClick={handleTransferClick}
               selectedBirths={selectedBirths}
               onSelectBirth={handleSelectBirth}
               onSelectAllBirths={() => handleSelectAllBirths(filteredDataForAll)}
@@ -330,6 +351,7 @@ export default function BirthsPage() {
                   renderFilterableHeader={renderFilterableHeader} 
                   onEditClick={handleEditClick}
                   onDeleteClick={handleDeleteClick}
+                  onTransferClick={handleTransferClick}
                   selectedBirths={selectedBirths}
                   onSelectBirth={handleSelectBirth}
                   onSelectAllBirths={() => handleSelectAllBirths(farmFilteredData)}
@@ -365,6 +387,21 @@ export default function BirthsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <AlertDialog open={isTransferAlertOpen} onOpenChange={setIsTransferAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Transferência</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza de que deseja transferir a bezerra da vaca 
+              <span className="font-bold"> Nº {birthToTransfer?.cowId}</span> para o rebanho de vacas? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBirthToTransfer(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmTransfer}>Sim, Transferir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
@@ -376,13 +413,14 @@ interface CardWithTableProps {
   renderFilterableHeader: (column: ColumnKey, label: string, data: Birth[]) => React.ReactNode;
   onEditClick: (birth: Birth) => void;
   onDeleteClick: (birth: Birth) => void;
+  onTransferClick: (birth: Birth) => void;
   selectedBirths: string[];
   onSelectBirth: (birthId: string | undefined) => void;
   onSelectAllBirths: () => void;
 }
 
 
-function CardWithTable({ title, data, allData, renderFilterableHeader, onEditClick, onDeleteClick, selectedBirths, onSelectBirth, onSelectAllBirths }: CardWithTableProps) {
+function CardWithTable({ title, data, allData, renderFilterableHeader, onEditClick, onDeleteClick, onTransferClick, selectedBirths, onSelectBirth, onSelectAllBirths }: CardWithTableProps) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
       <div className="p-6">
@@ -457,6 +495,12 @@ function CardWithTable({ title, data, allData, renderFilterableHeader, onEditCli
                   <TableCell>{birth.location || '-'}</TableCell>
                    <TableCell className="text-right">
                     <div className="flex items-center justify-end">
+                      {birth.sex === 'Fêmea' && (
+                        <Button variant="ghost" size="icon" title="Transferir para Vacas" onClick={() => onTransferClick(birth)}>
+                            <Send className="h-4 w-4" />
+                            <span className="sr-only">Transferir</span>
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => onEditClick(birth)}>
                           <PencilRuler className="h-4 w-4" />
                           <span className="sr-only">Editar</span>
