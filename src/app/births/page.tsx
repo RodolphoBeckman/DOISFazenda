@@ -328,91 +328,93 @@ export default function BirthsPage() {
         </div>
       </div>
       
-       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Machos</CardTitle>
-            <GitCommitVertical className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{sexCounts['Macho'] || 0}</div>
-            <p className="text-xs text-muted-foreground">Total de bezerros machos</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Fêmeas</CardTitle>
-            <GitBranch className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{sexCounts['Fêmea'] || 0}</div>
-             <p className="text-xs text-muted-foreground">Total de bezerras fêmeas</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Abortos</CardTitle>
-            <XCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{sexCounts['Aborto'] || 0}</div>
-            <p className="text-xs text-muted-foreground">Total de perdas registradas</p>
-          </CardContent>
-        </Card>
-         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sexo Não Definido</CardTitle>
-            <HelpCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{sexCounts['Não Definido'] || 0}</div>
-            <p className="text-xs text-muted-foreground">Total de registros sem sexo</p>
-          </CardContent>
-        </Card>
-      </div>
-
       {isClient && (
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">Todos</TabsTrigger>
-          {farms.map(farm => (
-            <TabsTrigger key={farm} value={farm}>{farm}</TabsTrigger>
-          ))}
-        </TabsList>
-        <TabsContent value="all">
-            <CardWithTable 
-              title="Todos os Nascimentos" 
-              data={filteredDataForAll} 
-              allData={allBirths} 
-              renderFilterableHeader={renderFilterableHeader}
-              onEditClick={handleEditClick}
-              onDeleteClick={handleDeleteClick}
-              onTransferClick={handleTransferClick}
-              selectedBirths={selectedBirths}
-              onSelectBirth={handleSelectBirth}
-              onSelectAllBirths={() => handleSelectAllBirths(filteredDataForAll)}
-            />
-        </TabsContent>
-        {farms.map(farm => {
-          const farmFilteredData = getFilteredAndSortedData(allBirths.filter(b => b.farm === farm));
-          return (
-            <TabsContent key={farm} value={farm}>
+        <>
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Machos</CardTitle>
+                <GitCommitVertical className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{sexCounts['Macho'] || 0}</div>
+                <p className="text-xs text-muted-foreground">Total de bezerros machos</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Fêmeas</CardTitle>
+                <GitBranch className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{sexCounts['Fêmea'] || 0}</div>
+                 <p className="text-xs text-muted-foreground">Total de bezerras fêmeas</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Abortos</CardTitle>
+                <XCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{sexCounts['Aborto'] || 0}</div>
+                <p className="text-xs text-muted-foreground">Total de perdas registradas</p>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Sexo Não Definido</CardTitle>
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{sexCounts['Não Definido'] || 0}</div>
+                <p className="text-xs text-muted-foreground">Total de registros sem sexo</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">Todos</TabsTrigger>
+              {farms.map(farm => (
+                <TabsTrigger key={farm} value={farm}>{farm}</TabsTrigger>
+              ))}
+            </TabsList>
+            <TabsContent value="all">
                 <CardWithTable 
-                  title={`Nascimentos em ${farm}`} 
-                  data={farmFilteredData} 
+                  title="Todos os Nascimentos" 
+                  data={filteredDataForAll} 
                   allData={allBirths} 
-                  renderFilterableHeader={renderFilterableHeader} 
+                  renderFilterableHeader={renderFilterableHeader}
                   onEditClick={handleEditClick}
                   onDeleteClick={handleDeleteClick}
                   onTransferClick={handleTransferClick}
                   selectedBirths={selectedBirths}
                   onSelectBirth={handleSelectBirth}
-                  onSelectAllBirths={() => handleSelectAllBirths(farmFilteredData)}
+                  onSelectAllBirths={() => handleSelectAllBirths(filteredDataForAll)}
                 />
             </TabsContent>
-          )
-        })}
-      </Tabs>
+            {farms.map(farm => {
+              const farmFilteredData = getFilteredAndSortedData(allBirths.filter(b => b.farm === farm));
+              return (
+                <TabsContent key={farm} value={farm}>
+                    <CardWithTable 
+                      title={`Nascimentos em ${farm}`} 
+                      data={farmFilteredData} 
+                      allData={allBirths} 
+                      renderFilterableHeader={renderFilterableHeader} 
+                      onEditClick={handleEditClick}
+                      onDeleteClick={handleDeleteClick}
+                      onTransferClick={handleTransferClick}
+                      selectedBirths={selectedBirths}
+                      onSelectBirth={handleSelectBirth}
+                      onSelectAllBirths={() => handleSelectAllBirths(farmFilteredData)}
+                    />
+                </TabsContent>
+              )
+            })}
+          </Tabs>
+        </>
       )}
        <EditBirthDialog
         birth={selectedBirth}
@@ -576,7 +578,3 @@ function CardWithTable({ title, data, allData, renderFilterableHeader, onEditCli
     </div>
   );
 }
-
-    
-
-    

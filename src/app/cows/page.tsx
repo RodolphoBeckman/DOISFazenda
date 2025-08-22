@@ -295,82 +295,84 @@ export default function CowsPage() {
             </Button>
         </div>
       </div>
-
-       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Vacas</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{animalCounts.vacas}</div>
-            <p className="text-xs text-muted-foreground">Total de matrizes no rebanho</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Bezerros</CardTitle>
-            <GitCommitVertical className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{animalCounts.bezerros}</div>
-             <p className="text-xs text-muted-foreground">Total de machos jovens</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Bezerras</CardTitle>
-            <GitBranch className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{animalCounts.bezerras}</div>
-            <p className="text-xs text-muted-foreground">Total de fêmeas jovens</p>
-          </CardContent>
-        </Card>
-      </div>
-     
+      
       {isClient && (
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">Todas</TabsTrigger>
-          {statuses.map(status => (
-            <TabsTrigger key={status} value={status.toLowerCase().replace(' ', '-')}>{status}</TabsTrigger>
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Vacas</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{animalCounts.vacas}</div>
+                <p className="text-xs text-muted-foreground">Total de matrizes no rebanho</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Bezerros</CardTitle>
+                <GitCommitVertical className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{animalCounts.bezerros}</div>
+                 <p className="text-xs text-muted-foreground">Total de machos jovens</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Bezerras</CardTitle>
+                <GitBranch className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{animalCounts.bezerras}</div>
+                <p className="text-xs text-muted-foreground">Total de fêmeas jovens</p>
+              </CardContent>
+            </Card>
+          </div>
+         
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">Todas</TabsTrigger>
+              {statuses.map(status => (
+                <TabsTrigger key={status} value={status.toLowerCase().replace(' ', '-')}>{status}</TabsTrigger>
 
-          ))}
-        </TabsList>
+              ))}
+            </TabsList>
 
-        <TabsContent value="all">
-          <CardWithTable 
-            title="Todas as Vacas" 
-            data={filteredData} 
-            renderFilterableHeader={renderFilterableHeader} 
-            onEditClick={handleEditClick}
-            onDeleteClick={handleDeleteClick}
-            onDiscardClick={handleDiscardClick}
-            selectedCows={selectedCows}
-            onSelectCow={handleSelectCow}
-            onSelectAllCows={() => handleSelectAllCows(filteredData)}
-          />
-        </TabsContent>
-        {statuses.map(status => {
-            const statusFilteredData = getFilteredAndSortedData(allCows.filter((c) => c.status === status));
-            return (
-                <TabsContent key={status} value={status.toLowerCase().replace(' ', '-')}>
-                    <CardWithTable
-                        title={`Vacas ${status}`}
-                        data={statusFilteredData}
-                        renderFilterableHeader={renderFilterableHeader}
-                        onEditClick={handleEditClick}
-                        onDeleteClick={handleDeleteClick}
-                        onDiscardClick={handleDiscardClick}
-                        selectedCows={selectedCows}
-                        onSelectCow={handleSelectCow}
-                        onSelectAllCows={() => handleSelectAllCows(statusFilteredData)}
-                    />
-                </TabsContent>
-            )
-        })}
-      </Tabs>
+            <TabsContent value="all">
+              <CardWithTable 
+                title="Todas as Vacas" 
+                data={filteredData} 
+                renderFilterableHeader={renderFilterableHeader} 
+                onEditClick={handleEditClick}
+                onDeleteClick={handleDeleteClick}
+                onDiscardClick={handleDiscardClick}
+                selectedCows={selectedCows}
+                onSelectCow={handleSelectCow}
+                onSelectAllCows={() => handleSelectAllCows(filteredData)}
+              />
+            </TabsContent>
+            {statuses.map(status => {
+                const statusFilteredData = getFilteredAndSortedData(allCows.filter((c) => c.status === status));
+                return (
+                    <TabsContent key={status} value={status.toLowerCase().replace(' ', '-')}>
+                        <CardWithTable
+                            title={`Vacas ${status}`}
+                            data={statusFilteredData}
+                            renderFilterableHeader={renderFilterableHeader}
+                            onEditClick={handleEditClick}
+                            onDeleteClick={handleDeleteClick}
+                            onDiscardClick={handleDiscardClick}
+                            selectedCows={selectedCows}
+                            onSelectCow={handleSelectCow}
+                            onSelectAllCows={() => handleSelectAllCows(statusFilteredData)}
+                        />
+                    </TabsContent>
+                )
+            })}
+          </Tabs>
+        </>
       )}
        <EditCowDialog
         cow={selectedCow}
@@ -511,5 +513,3 @@ function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDel
     </div>
   );
 }
-
-    
