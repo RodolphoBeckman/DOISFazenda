@@ -131,6 +131,10 @@ export default function ImportPage() {
     let errorCount = 0;
 
     for (const row of fullData) {
+        if (!row || row.every(cell => cell === null || cell === '')) {
+            continue; // Skip empty rows
+        }
+
         const rowData: { [key: string]: any } = {};
         headers.forEach((header, index) => {
             rowData[header] = row[index];
@@ -159,7 +163,7 @@ export default function ImportPage() {
                     farm: String(rowData['fazenda'] || ''),
                     lot: String(rowData['lote'] || ''),
                     location: String(rowData['localização'] || ''),
-                    status: String(rowData['status'] || 'Vazia'), // Default to 'Vazia' if null/undefined
+                    status: String(rowData['status'] || 'Vazia'),
                     registrationStatus: String(rowData['status do cadastro'] || 'Ativo'),
                 });
                 addCow(cow);
@@ -181,6 +185,8 @@ export default function ImportPage() {
             }
         } catch (e) {
             errorCount++;
+            // This will now only log errors for rows that are supposed to be valid, but still fail.
+            // Empty rows will be skipped silently.
             console.error('Validation Error on row:', rowData, e);
         }
     }
