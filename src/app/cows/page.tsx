@@ -245,16 +245,15 @@ function CardWithTable({ title, data, renderFilterableHeader }: { title: string;
               <TableRow>
                 {renderFilterableHeader('id', 'Brinco Nº')}
                 {renderFilterableHeader('animal', 'Animal')}
-                {renderFilterableHeader('loteT', 'Lote T.')}
                 {renderFilterableHeader('origem', 'Origem')}
-                {renderFilterableHeader('status', 'Status')}
+                {renderFilterableHeader('lot', 'Lote')}
                 {renderFilterableHeader('obs1', 'Obs: 1')}
                 {renderFilterableHeader('farm', 'Fazenda')}
+                {renderFilterableHeader('location', 'Localização')}
                 {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
                 {renderFilterableHeader('mes', 'Mês')}
                 {renderFilterableHeader('ano', 'Ano')}
-                {renderFilterableHeader('location', 'Localização')}
-                {renderFilterableHeader('registrationStatus', 'Status Cadastro')}
+                {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -262,27 +261,14 @@ function CardWithTable({ title, data, renderFilterableHeader }: { title: string;
                 <TableRow key={cow.id}>
                   <TableCell className="font-medium">{cow.id}</TableCell>
                   <TableCell>{cow.animal}</TableCell>
-                  <TableCell>{cow.loteT}</TableCell>
                   <TableCell>{cow.origem}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        cow.status === 'Prenha'
-                          ? 'default'
-                          : cow.status === 'Com cria'
-                          ? 'secondary'
-                          : 'outline'
-                      }
-                    >
-                      {cow.status}
-                    </Badge>
-                  </TableCell>
+                  <TableCell>{cow.lot}</TableCell>
                   <TableCell>{cow.obs1}</TableCell>
                   <TableCell>{cow.farm}</TableCell>
+                  <TableCell>{cow.location}</TableCell>
                   <TableCell>{cow.motivoDoDescarte}</TableCell>
                   <TableCell>{cow.mes}</TableCell>
                   <TableCell>{cow.ano}</TableCell>
-                  <TableCell>{cow.location}</TableCell>
                   <TableCell>
                    <Badge
                       variant={
