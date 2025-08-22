@@ -172,10 +172,10 @@ export default function ImportPage() {
 
           } else if (importType === 'nascimentos') {
                const birthData = {
-                  cowId: String(rowData['brinco nº'] || rowData['brinco'] || ''),
-                  date: rowData['data nascim'] || rowData['data de nascimento'] ? new Date(rowData['data nascim'] || rowData['data de nascimento']) : undefined,
-                  sex: String(rowData['sexo do bezerr'] || rowData['sexo do bezerro'] || ''),
-                  breed: String(rowData['raça do bezerr'] || rowData['raça do bezerro'] || rowData['raça'] || ''),
+                  cowId: String(rowData['brinco nº'] || ''),
+                  date: rowData['data nascimento'] ? new Date(rowData['data nascimento']) : undefined,
+                  sex: String(rowData['sexo do bezerro'] || ''),
+                  breed: String(rowData['raça do bezerro'] || ''),
                   sire: String(rowData['nome do pai'] || ''),
                   lot: String(rowData['lote'] || ''),
                   farm: String(rowData['fazenda'] || ''),
