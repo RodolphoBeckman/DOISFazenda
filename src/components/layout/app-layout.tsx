@@ -47,7 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full">
-      <Sidebar collapsible="icon" variant="sidebar" side="left">
+      <Sidebar collapsible="icon" variant="inset" side="left">
         <SidebarHeader className="h-16 flex items-center justify-between p-2">
           <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
              <Logo />
@@ -74,7 +74,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
-      <SidebarInset className="flex-1">{children}</SidebarInset>
+      <SidebarInset className="flex-1 bg-transparent">{children}</SidebarInset>
     </div>
   );
 }
