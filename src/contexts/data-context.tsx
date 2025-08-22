@@ -17,6 +17,9 @@ interface DataContextType {
   deleteCow: (id: string) => void;
   updateCowsLot: (ids: string[], newLot: string) => void;
   addBirth: (birth: Birth) => void;
+  updateBirth: (cowId: string, date: Date, updatedBirth: Birth) => void;
+  deleteBirth: (cowId: string, date: Date) => void;
+  updateBirthsLotAndSex: (birthsToUpdate: { cowId: string; date: Date }[], newLot: string | undefined, newSex: 'Macho' | 'Fêmea' | 'Aborto' | 'Não Definido' | undefined) => void;
   replaceCows: (newCows: Cow[]) => void;
   replaceBirths: (newBirths: Birth[]) => void;
 }
@@ -35,7 +38,7 @@ const getInitialData = (): Data => {
     // Ensure both are arrays, initialize if missing
     return {
       cows: data.cows || [],
-      births: data.births || []
+      births: (data.births || []).map((b: Birth) => ({...b, date: b.date ? new Date(b.date) : undefined}))
     };
   } catch (error) {
     console.warn(`Error reading localStorage key “${DATA_STORAGE_KEY}”:`, error);
@@ -94,7 +97,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const addBirth = (birth: Birth) => {
     setData((prevData) => {
         // Avoid adding duplicates
-        if (prevData.births.some(b => b.cowId.trim().toLowerCase() === birth.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === new Date(birth.date).toDateString())) {
+        const birthExists = prevData.births.some(b => 
+            b.cowId.trim().toLowerCase() === birth.cowId.trim().toLowerCase() && 
+            b.date && birth.date &&
+            new Date(b.date).getTime() === new Date(birth.date).getTime()
+        );
+        if (birthExists) {
             return prevData;
         }
         return {
@@ -102,6 +110,48 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             births: [...prevData.births, birth],
         };
     });
+  };
+
+  const updateBirth = (cowId: string, date: Date, updatedBirth: Birth) => {
+      setData(prevData => ({
+          ...prevData,
+          births: prevData.births.map(b =>
+              b.cowId === cowId && b.date && new Date(b.date).getTime() === new Date(date).getTime()
+                  ? updatedBirth
+                  : b
+          ),
+      }));
+  };
+
+  const deleteBirth = (cowId: string, date: Date) => {
+      setData(prevData => ({
+          ...prevData,
+          births: prevData.births.filter(b =>
+              !(b.cowId === cowId && b.date && new Date(b.date).getTime() === new Date(date).getTime())
+          ),
+      }));
+  };
+
+  const updateBirthsLotAndSex = (birthsToUpdate: { cowId: string; date: Date }[], newLot: string | undefined, newSex: 'Macho' | 'Fêmea' | 'Aborto' | 'Não Definido' | undefined) => {
+    setData(prevData => ({
+        ...prevData,
+        births: prevData.births.map(birth => {
+            const shouldUpdate = birthsToUpdate.some(itemToUpdate =>
+                itemToUpdate.cowId === birth.cowId &&
+                birth.date &&
+                new Date(itemToUpdate.date).getTime() === new Date(birth.date).getTime()
+            );
+
+            if (shouldUpdate) {
+                return {
+                    ...birth,
+                    lot: newLot !== undefined ? newLot : birth.lot,
+                    sex: newSex !== undefined ? newSex : birth.sex,
+                };
+            }
+            return birth;
+        }),
+    }));
   };
 
   const replaceCows = (newCows: Cow[]) => {
@@ -114,7 +164,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const replaceBirths = (newBirths: Birth[]) => {
     setData(prevData => ({
       ...prevData,
-      births: newBirths,
+      births: newBirths.map(b => ({...b, date: b.date ? new Date(b.date) : undefined})),
     }));
   };
 
@@ -127,6 +177,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       deleteCow, 
       updateCowsLot, 
       addBirth,
+      updateBirth,
+      deleteBirth,
+      updateBirthsLotAndSex,
       replaceCows,
       replaceBirths
     }}>

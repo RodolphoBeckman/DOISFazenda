@@ -25,19 +25,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2 } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import type { Birth } from '@/lib/data-schemas';
 import { useData } from '@/contexts/data-context';
+import { Checkbox } from '@/components/ui/checkbox';
+import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
+import EditBirthDialog from '@/components/edit-birth-dialog';
+import BulkUpdateBirthDialog from '@/components/bulk-update-birth-dialog';
 
-type ColumnKey = keyof Birth;
+type ColumnKey = keyof Birth | 'id';
 type SortDirection = 'asc' | 'desc' | null;
 
 export default function BirthsPage() {
-  const { births: allBirths } = useData();
+  const { births: allBirths, deleteBirth } = useData();
+  const { toast } = useToast();
   const [isClient, setIsClient] = React.useState(false);
   const [filters, setFilters] = React.useState<Record<string, string[]>>({
      cowId: [], date: [], sex: [], farm: [], breed: [], sire: [], lot: [], location: [], observations: [], obs1: [], jvvo: []
@@ -47,9 +64,59 @@ export default function BirthsPage() {
     cowId: '', date: '', sex: '', farm: '', breed: '', sire: '', lot: '', location: '', observations: '', obs1: '', jvvo: ''
   });
   
+  const [selectedBirths, setSelectedBirths] = React.useState<{ cowId: string; date: Date }[]>([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = React.useState(false);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
+  const [birthToDelete, setBirthToDelete] = React.useState<Birth | null>(null);
+  const [selectedBirth, setSelectedBirth] = React.useState<Birth | null>(null);
+
   React.useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleEditClick = (birth: Birth) => {
+    setSelectedBirth(birth);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleDeleteClick = (birth: Birth) => {
+    setBirthToDelete(birth);
+    setIsAlertOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (birthToDelete && birthToDelete.date) {
+      deleteBirth(birthToDelete.cowId, birthToDelete.date);
+      toast({
+        title: "Nascimento Excluído",
+        description: `O registro de nascimento da vaca ${birthToDelete.cowId} foi removido.`,
+      });
+      setIsAlertOpen(false);
+      setBirthToDelete(null);
+    }
+  };
+
+  const handleSelectBirth = (cowId: string, date: Date | undefined) => {
+    if (!date) return;
+    setSelectedBirths(prev => {
+      const key = { cowId, date };
+      const isSelected = prev.some(b => b.cowId === key.cowId && b.date.getTime() === key.date.getTime());
+      if (isSelected) {
+        return prev.filter(b => !(b.cowId === key.cowId && b.date.getTime() === key.date.getTime()));
+      } else {
+        return [...prev, key];
+      }
+    });
+  };
+
+  const handleSelectAllBirths = (filteredData: Birth[]) => {
+     if (selectedBirths.length === filteredData.length) {
+      setSelectedBirths([]);
+    } else {
+      setSelectedBirths(filteredData.map(b => ({ cowId: b.cowId, date: b.date! })).filter(b => b.date));
+    }
+  }
 
 
   const handleFilterChange = (column: ColumnKey, value: string) => {
@@ -76,16 +143,20 @@ export default function BirthsPage() {
     let filteredData = dataSet.filter(item => {
         return Object.entries(filters).every(([key, values]) => {
             if (values.length === 0) return true;
-            const itemValue = item[key as ColumnKey];
+            const itemValue = item[key as keyof Birth];
             // @ts-ignore
-            return values.includes(itemValue);
+            if (key === 'date') {
+                 // @ts-ignore
+                 return values.includes(item.date ? new Date(item.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada');
+            }
+            return values.includes(String(itemValue));
         });
     });
 
     if (sort.column && sort.direction) {
       filteredData.sort((a, b) => {
-        const aValue = a[sort.column!];
-        const bValue = b[sort.column!];
+        const aValue = a[sort.column! as keyof Birth];
+        const bValue = b[sort.column! as keyof Birth];
         // @ts-ignore
         if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
         // @ts-ignore
@@ -99,8 +170,20 @@ export default function BirthsPage() {
   
   const getUniqueValues = (dataSet: Birth[], column: ColumnKey) => {
     const searchTerm = searchTerms[column].toLowerCase();
-    // @ts-ignore
-    const uniqueValues = Array.from(new Set(dataSet.map(item => item[column]))).sort();
+    
+    let uniqueValues;
+    if (column === 'date') {
+       uniqueValues = Array.from(new Set(dataSet.map(item => item.date ? new Date(item.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'))).sort((a, b) => {
+        if (a === 'Data não informada') return 1;
+        if (b === 'Data não informada') return -1;
+        // @ts-ignore
+        return new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-'));
+       });
+    } else {
+        // @ts-ignore
+       uniqueValues = Array.from(new Set(dataSet.map(item => item[column as keyof Birth]))).sort();
+    }
+    
     if (!searchTerm) return uniqueValues;
     // @ts-ignore
     return uniqueValues.filter(value => value && String(value).toLowerCase().includes(searchTerm));
@@ -116,9 +199,14 @@ export default function BirthsPage() {
 
   const renderFilterableHeader = (column: ColumnKey, label: string, dataSet: Birth[]) => {
     const uniqueValues = getUniqueValues(dataSet, column);
-    // @ts-ignore
-    const allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => String(item[column])))).filter(Boolean).sort();
+    let allUniqueValuesForSelectAll;
 
+     if (column === 'date') {
+        allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => item.date ? new Date(item.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'))).filter(Boolean).sort();
+    } else {
+       // @ts-ignore
+       allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => String(item[column as keyof Birth])))).filter(Boolean).sort();
+    }
 
     return (
         <TableHead>
@@ -190,11 +278,27 @@ export default function BirthsPage() {
 
   const farms = Array.from(new Set(allBirths.map(b => b.farm).filter(Boolean) as string[]));
 
+  const filteredDataForAll = getFilteredAndSortedData(allBirths);
+
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <h1 className="text-3xl font-bold tracking-tight font-headline">
-        Registro de Nascimentos
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight font-headline">
+          Registro de Nascimentos
+        </h1>
+        <div className="flex items-center gap-2">
+            <Button onClick={() => setIsBulkUpdateDialogOpen(true)} disabled={selectedBirths.length === 0}>
+                <PencilRuler />
+                <span>Alterar em Massa ({selectedBirths.length})</span>
+            </Button>
+            <Button asChild>
+                <Link href="/births/new">
+                <PlusCircle /> 
+                <span>Novo Nascimento</span>
+                </Link>
+            </Button>
+        </div>
+      </div>
       
       {isClient && (
       <Tabs defaultValue="all">
@@ -205,21 +309,82 @@ export default function BirthsPage() {
           ))}
         </TabsList>
         <TabsContent value="all">
-            <CardWithTable title="Todos os Nascimentos" data={getFilteredAndSortedData(allBirths)} allData={allBirths} renderFilterableHeader={renderFilterableHeader} />
+            <CardWithTable 
+              title="Todos os Nascimentos" 
+              data={filteredDataForAll} 
+              allData={allBirths} 
+              renderFilterableHeader={renderFilterableHeader}
+              onEditClick={handleEditClick}
+              onDeleteClick={handleDeleteClick}
+              selectedBirths={selectedBirths}
+              onSelectBirth={handleSelectBirth}
+              onSelectAllBirths={() => handleSelectAllBirths(filteredDataForAll)}
+            />
         </TabsContent>
-        {farms.map(farm => (
+        {farms.map(farm => {
+          const farmFilteredData = getFilteredAndSortedData(allBirths.filter(b => b.farm === farm));
+          return (
             <TabsContent key={farm} value={farm}>
-                <CardWithTable title={`Nascimentos em ${farm}`} data={getFilteredAndSortedData(allBirths.filter(b => b.farm === farm))} allData={allBirths} renderFilterableHeader={renderFilterableHeader} />
+                <CardWithTable 
+                  title={`Nascimentos em ${farm}`} 
+                  data={farmFilteredData} 
+                  allData={allBirths} 
+                  renderFilterableHeader={renderFilterableHeader} 
+                  onEditClick={handleEditClick}
+                  onDeleteClick={handleDeleteClick}
+                  selectedBirths={selectedBirths}
+                  onSelectBirth={handleSelectBirth}
+                  onSelectAllBirths={() => handleSelectAllBirths(farmFilteredData)}
+                />
             </TabsContent>
-        ))}
+          )
+        })}
       </Tabs>
       )}
+       <EditBirthDialog
+        birth={selectedBirth}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+      />
+       <BulkUpdateBirthDialog
+        isOpen={isBulkUpdateDialogOpen}
+        onClose={() => setIsBulkUpdateDialogOpen(false)}
+        birthsToUpdate={selectedBirths}
+        onSuccess={() => setSelectedBirths([])}
+      />
+       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o registro de nascimento da vaca
+              <span className="font-bold"> Nº {birthToDelete?.cowId}</span> do dia {birthToDelete?.date?.toLocaleDateString('pt-BR')}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBirthToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
 
+interface CardWithTableProps {
+  title: string;
+  data: Birth[];
+  allData: Birth[];
+  renderFilterableHeader: (column: ColumnKey, label: string, data: Birth[]) => React.ReactNode;
+  onEditClick: (birth: Birth) => void;
+  onDeleteClick: (birth: Birth) => void;
+  selectedBirths: { cowId: string; date: Date }[];
+  onSelectBirth: (cowId: string, date: Date | undefined) => void;
+  onSelectAllBirths: () => void;
+}
 
-function CardWithTable({ title, data, allData, renderFilterableHeader }: { title: string; data: Birth[], allData: Birth[], renderFilterableHeader: (column: ColumnKey, label: string, data: Birth[]) => React.ReactNode }) {
+
+function CardWithTable({ title, data, allData, renderFilterableHeader, onEditClick, onDeleteClick, selectedBirths, onSelectBirth, onSelectAllBirths }: CardWithTableProps) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
       <div className="p-6">
@@ -230,6 +395,13 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
           <Table>
             <TableHeader>
               <TableRow>
+                 <TableHead className="w-[50px]">
+                    <Checkbox
+                        checked={data.length > 0 && selectedBirths.length === data.length}
+                        onCheckedChange={onSelectAllBirths}
+                        aria-label="Selecionar todas as linhas"
+                    />
+                </TableHead>
                 {renderFilterableHeader('cowId', 'Brinco Nº', allData)}
                 {renderFilterableHeader('sex', 'Sexo do Bezerro', allData)}
                 {renderFilterableHeader('breed', 'Raça do Bezerro', allData)}
@@ -240,11 +412,22 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
                 {renderFilterableHeader('jvvo', 'JV - Vo', allData)}
                 {renderFilterableHeader('farm', 'Fazenda', allData)}
                 {renderFilterableHeader('location', 'Localização', allData)}
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map((birth, index) => (
-                <TableRow key={index}>
+                <TableRow 
+                  key={`${birth.cowId}-${birth.date?.toISOString()}-${index}`}
+                  data-state={selectedBirths.some(b => b.cowId === birth.cowId && b.date?.getTime() === birth.date?.getTime()) ? "selected" : ""}
+                >
+                   <TableCell>
+                      <Checkbox
+                          checked={selectedBirths.some(b => b.cowId === birth.cowId && b.date?.getTime() === birth.date?.getTime())}
+                          onCheckedChange={() => onSelectBirth(birth.cowId, birth.date)}
+                          aria-label={`Selecionar linha ${index + 1}`}
+                      />
+                  </TableCell>
                   <TableCell className="font-medium">{birth.cowId}</TableCell>
                   <TableCell>
                     {birth.sex ? (
@@ -262,7 +445,7 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
                         {birth.sex}
                       </Badge>
                     ) : (
-                      <span className="text-muted-foreground">-</span>
+                      <Badge variant="outline">Não Definido</Badge>
                     )}
                   </TableCell>
                   <TableCell>{birth.breed || '-'}</TableCell>
@@ -273,6 +456,18 @@ function CardWithTable({ title, data, allData, renderFilterableHeader }: { title
                   <TableCell>{birth.jvvo || '-'}</TableCell>
                   <TableCell>{birth.farm || '-'}</TableCell>
                   <TableCell>{birth.location || '-'}</TableCell>
+                   <TableCell className="text-right">
+                    <div className="flex items-center justify-end">
+                      <Button variant="ghost" size="icon" onClick={() => onEditClick(birth)}>
+                          <PencilRuler className="h-4 w-4" />
+                          <span className="sr-only">Editar</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => onDeleteClick(birth)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Excluir</span>
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
