@@ -64,7 +64,7 @@ export default function BirthsPage() {
     cowId: '', date: '', sex: '', farm: '', breed: '', sire: '', lot: '', location: '', observations: '', obs1: '', jvvo: ''
   });
   
-  const [selectedBirths, setSelectedBirths] = React.useState<{ cowId: string; date: Date }[]>([]);
+  const [selectedBirths, setSelectedBirths] = React.useState<string[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = React.useState(false);
   const [isAlertOpen, setIsAlertOpen] = React.useState(false);
@@ -86,8 +86,8 @@ export default function BirthsPage() {
   };
 
   const handleConfirmDelete = () => {
-    if (birthToDelete && birthToDelete.date) {
-      deleteBirth(birthToDelete.cowId, birthToDelete.date);
+    if (birthToDelete?.id) {
+      deleteBirth(birthToDelete.id);
       toast({
         title: "Nascimento Excluído",
         description: `O registro de nascimento da vaca ${birthToDelete.cowId} foi removido.`,
@@ -97,15 +97,13 @@ export default function BirthsPage() {
     }
   };
 
-  const handleSelectBirth = (cowId: string, date: Date | undefined) => {
-    if (!date) return;
+  const handleSelectBirth = (birthId: string | undefined) => {
+    if (!birthId) return;
     setSelectedBirths(prev => {
-      const key = { cowId, date };
-      const isSelected = prev.some(b => b.cowId === key.cowId && b.date.getTime() === key.date.getTime());
-      if (isSelected) {
-        return prev.filter(b => !(b.cowId === key.cowId && b.date.getTime() === key.date.getTime()));
+      if (prev.includes(birthId)) {
+        return prev.filter(id => id !== birthId);
       } else {
-        return [...prev, key];
+        return [...prev, birthId];
       }
     });
   };
@@ -114,7 +112,7 @@ export default function BirthsPage() {
      if (selectedBirths.length === filteredData.length) {
       setSelectedBirths([]);
     } else {
-      setSelectedBirths(filteredData.map(b => ({ cowId: b.cowId, date: b.date! })).filter(b => b.date));
+      setSelectedBirths(filteredData.map(b => b.id!).filter(Boolean));
     }
   }
 
@@ -378,8 +376,8 @@ interface CardWithTableProps {
   renderFilterableHeader: (column: ColumnKey, label: string, data: Birth[]) => React.ReactNode;
   onEditClick: (birth: Birth) => void;
   onDeleteClick: (birth: Birth) => void;
-  selectedBirths: { cowId: string; date: Date }[];
-  onSelectBirth: (cowId: string, date: Date | undefined) => void;
+  selectedBirths: string[];
+  onSelectBirth: (birthId: string | undefined) => void;
   onSelectAllBirths: () => void;
 }
 
@@ -418,14 +416,15 @@ function CardWithTable({ title, data, allData, renderFilterableHeader, onEditCli
             <TableBody>
               {data.map((birth, index) => (
                 <TableRow 
-                  key={`${birth.cowId}-${birth.date?.toISOString()}-${index}`}
-                  data-state={selectedBirths.some(b => b.cowId === birth.cowId && b.date?.getTime() === birth.date?.getTime()) ? "selected" : ""}
+                  key={birth.id || `${birth.cowId}-${index}`}
+                  data-state={birth.id && selectedBirths.includes(birth.id) ? "selected" : ""}
                 >
                    <TableCell>
                       <Checkbox
-                          checked={selectedBirths.some(b => b.cowId === birth.cowId && b.date?.getTime() === birth.date?.getTime())}
-                          onCheckedChange={() => onSelectBirth(birth.cowId, birth.date)}
+                          checked={birth.id ? selectedBirths.includes(birth.id) : false}
+                          onCheckedChange={() => onSelectBirth(birth.id)}
                           aria-label={`Selecionar linha ${index + 1}`}
+                          disabled={!birth.id}
                       />
                   </TableCell>
                   <TableCell className="font-medium">{birth.cowId}</TableCell>

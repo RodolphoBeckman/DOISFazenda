@@ -28,7 +28,7 @@ import { Loader2 } from "lucide-react"
 interface BulkUpdateBirthDialogProps {
   isOpen: boolean
   onClose: () => void
-  birthsToUpdate: { cowId: string; date: Date }[]
+  birthsToUpdate: string[]
   onSuccess: () => void
 }
 

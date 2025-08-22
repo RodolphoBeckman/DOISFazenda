@@ -22,6 +22,7 @@ export type Cow = z.infer<typeof CowSchema>;
 
 // Esquema para o Registro de Nascimento
 export const BirthSchema = z.object({
+  id: z.string().optional(), // Adicionado ID único opcional
   cowId: z.string({ required_error: "Selecione a vaca." }),
   date: z.date({ required_error: "A data de nascimento é obrigatória." }).optional(),
   sex: z.enum(["Macho", "Fêmea", "Aborto", "Não Definido"]).optional(),

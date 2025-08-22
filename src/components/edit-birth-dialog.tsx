@@ -65,8 +65,8 @@ export default function EditBirthDialog({ birth, isOpen, onClose }: EditBirthDia
   }, [birth, form]);
 
   function onSubmit(data: FormValues) {
-    if (!birth || !birth.date) return;
-    updateBirth(birth.cowId, birth.date, data);
+    if (!birth?.id) return;
+    updateBirth(birth.id, data);
     toast({
       title: "Sucesso!",
       description: "Dados do nascimento atualizados.",
