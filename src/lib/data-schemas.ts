@@ -8,7 +8,7 @@ export const CowSchema = z.object({
   farm: z.string({ required_error: "Selecione a fazenda." }),
   lot: z.string({ required_error: "Selecione o lote." }),
   location: z.string().min(1, "A localização é obrigatória."),
-  status: z.enum(["Vazia", "Prenha", "Com cria"], { required_error: "Selecione o status."}),
+  status: z.enum(["Vazia", "Prenha", "Com cria"]).optional(),
   registrationStatus: z.enum(["Ativo", "Inativo"], { required_error: "Selecione o status do cadastro."}),
   // Campos opcionais mantidos do esquema original, caso sejam usados no futuro
   loteT: z.string().optional(),

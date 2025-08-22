@@ -62,7 +62,7 @@ export default function ImportPage() {
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
-          const workbook = xlsx.read(data, { type: 'array', cellDates: true });
+          const workbook = xlsx.read(data, { type: 'array', cellDates: true, dateNF: 'dd/mm/yyyy' });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: null, raw: false }) as (string | number | null)[][];
@@ -127,6 +127,17 @@ export default function ImportPage() {
 
     const headers = previewData.headers.map(h => h ? String(h).trim() : "");
     
+    // Helper function to get value by checking multiple possible header names
+    const getColumnValue = (rowObject: {[key: string]: any}, keys: string[]): any => {
+        for (const key of keys) {
+            if (rowObject.hasOwnProperty(key)) {
+                return rowObject[key];
+            }
+        }
+        return undefined;
+    };
+
+
     let importedCount = 0;
     let errorCount = 0;
 
@@ -137,21 +148,31 @@ export default function ImportPage() {
 
         const rowData: { [key: string]: any } = {};
         headers.forEach((header, index) => {
+            // Use original header name for mapping
             rowData[header] = row[index];
         });
         
         try {
           if (importType === 'vacas') {
-              const cowData = {
-                  id: String(rowData['Brinco Nº'] || ''),
-                  animal: String(rowData['Animal'] || ''),
-                  origem: String(rowData['Origem'] || ''),
-                  farm: String(rowData['Fazenda'] || ''),
-                  lot: String(rowData['Lote'] || ''),
-                  location: String(rowData['Localização'] || ''),
-                  status: String(rowData['Status'] || 'Vazia'),
-                  registrationStatus: String(rowData['Status do Cadastro'] || 'Ativo'),
+              const cowData: any = {
+                  id: getColumnValue(rowData, ['Brinco Nº']),
+                  animal: getColumnValue(rowData, ['Animal']),
+                  origem: getColumnValue(rowData, ['Origem']),
+                  farm: getColumnValue(rowData, ['Fazenda']),
+                  lot: getColumnValue(rowData, ['Lote']),
+                  location: getColumnValue(rowData, ['Localização']),
+                  registrationStatus: getColumnValue(rowData, ['Status do Cadastro']) || 'Ativo',
+                  loteT: getColumnValue(rowData, ['Lote T.']),
+                  obs1: getColumnValue(rowData, ['Obs: 1']),
+                  motivoDoDescarte: getColumnValue(rowData, ['Motivo do Descarte']),
+                  mes: getColumnValue(rowData, ['Mês']),
+                  ano: getColumnValue(rowData, ['Ano']),
               };
+
+              const statusValue = getColumnValue(rowData, ['Status']);
+              if (statusValue) {
+                  cowData.status = statusValue;
+              }
               
               if (!cowData.id || !cowData.animal || !cowData.location) {
                   continue;
@@ -172,15 +193,17 @@ export default function ImportPage() {
 
           } else if (importType === 'nascimentos') {
                const birthData = {
-                  cowId: String(rowData['Brinco Nº (Mãe)'] || ''),
-                  date: rowData['Data Nascim.'] ? new Date(rowData['Data Nascim.']) : undefined,
-                  sex: String(rowData['Sexo do Bezerro'] || ''),
-                  breed: String(rowData['Raça do Bezerro'] || ''),
-                  sire: String(rowData['Nome do Pai'] || ''),
-                  lot: String(rowData['Lote'] || ''),
-                  farm: String(rowData['Fazenda'] || ''),
-                  location: String(rowData['Localização'] || ''),
-                  observations: String(rowData['Observações'] || ''),
+                  cowId: getColumnValue(rowData, ['Brinco Nº (Mãe)']),
+                  date: getColumnValue(rowData, ['Data Nascimento']),
+                  sex: getColumnValue(rowData, ['Sexo do Bezerro']),
+                  breed: getColumnValue(rowData, ['Raça do Bezerro']),
+                  sire: getColumnValue(rowData, ['Nome do Pai']),
+                  lot: getColumnValue(rowData, ['Lote']),
+                  farm: getColumnValue(rowData, ['Fazenda']),
+                  location: getColumnValue(rowData, ['Localização']),
+                  observations: getColumnValue(rowData, ['Observações']),
+                  obs1: getColumnValue(rowData, ['Obs: 1']),
+                  jvvo: getColumnValue(rowData, ['JV - Vo']),
               }
 
               if (!birthData.cowId || !birthData.date || !birthData.sex || !birthData.breed || !birthData.lot || !birthData.farm || !birthData.location) {
@@ -206,6 +229,8 @@ export default function ImportPage() {
           }
         } catch (e) {
             errorCount++;
+            // This will now only log errors for rows that are supposed to be valid, but still fail.
+            // Empty rows will be skipped silently.
             console.error('Validation Error on row:', rowData, e);
         }
     }
