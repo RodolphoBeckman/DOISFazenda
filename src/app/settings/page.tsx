@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -53,6 +53,12 @@ export default function SettingsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogCategory, setDialogCategory] = useState<Category | null>(null);
   const [newItemName, setNewItemName] = useState("");
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const handleOpenDialog = (category: Category) => {
     setDialogCategory(category);
@@ -128,19 +134,21 @@ export default function SettingsPage() {
           Gerencie as configurações e cadastros básicos do sistema.
         </p>
 
-        <Tabs defaultValue="lots">
-          <TabsList>
-            <TabsTrigger value="lots">Lotes</TabsTrigger>
-            <TabsTrigger value="pastures">Pastos</TabsTrigger>
-            <TabsTrigger value="farms">Fazendas</TabsTrigger>
-            <TabsTrigger value="breeds">Raças</TabsTrigger>
-          </TabsList>
+        {isClient && (
+          <Tabs defaultValue="lots">
+            <TabsList>
+              <TabsTrigger value="lots">Lotes</TabsTrigger>
+              <TabsTrigger value="pastures">Pastos</TabsTrigger>
+              <TabsTrigger value="farms">Fazendas</TabsTrigger>
+              <TabsTrigger value="breeds">Raças</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="lots">{renderTable("lots")}</TabsContent>
-          <TabsContent value="pastures">{renderTable("pastures")}</TabsContent>
-          <TabsContent value="farms">{renderTable("farms")}</TabsContent>
-          <TabsContent value="breeds">{renderTable("breeds")}</TabsContent>
-        </Tabs>
+            <TabsContent value="lots">{renderTable("lots")}</TabsContent>
+            <TabsContent value="pastures">{renderTable("pastures")}</TabsContent>
+            <TabsContent value="farms">{renderTable("farms")}</TabsContent>
+            <TabsContent value="breeds">{renderTable("breeds")}</TabsContent>
+          </Tabs>
+        )}
       </main>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
