@@ -53,6 +53,16 @@ export default function NewCowPage() {
   const { toast } = useToast()
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      id: "",
+      animal: "",
+      origem: "",
+      farm: "",
+      lot: "",
+      location: "",
+      status: undefined,
+      registrationStatus: undefined,
+    },
   });
 
   function onSubmit(data: FormValues) {
@@ -119,7 +129,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a origem..." />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {origins.map((origin) => (
@@ -142,7 +152,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a fazenda..." />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {farms.map((farm) => (
@@ -165,7 +175,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o lote..." />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {lots.map((lot) => (
@@ -202,7 +212,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o status..." />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {statuses.map(status => (
@@ -224,7 +234,7 @@ export default function NewCowPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o status..." />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {registrationStatuses.map(status => (
@@ -246,5 +256,3 @@ export default function NewCowPage() {
     </main>
   );
 }
-
-    

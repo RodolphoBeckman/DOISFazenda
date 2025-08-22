@@ -57,6 +57,16 @@ export default function NewBirthPage() {
   const { toast } = useToast()
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      cowId: "",
+      sex: undefined,
+      breed: "",
+      sire: "",
+      lot: "",
+      farm: "",
+      location: "",
+      observations: "",
+    },
   });
 
   function onSubmit(data: FormValues) {
@@ -207,7 +217,7 @@ export default function NewBirthPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o lote..." />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {lots.map((lot) => (
@@ -229,7 +239,7 @@ export default function NewBirthPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a fazenda..." />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {farms.map(farm => (
@@ -281,5 +291,3 @@ export default function NewBirthPage() {
     </main>
   );
 }
-
-    
