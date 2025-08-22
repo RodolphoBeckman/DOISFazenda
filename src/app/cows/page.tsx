@@ -421,14 +421,16 @@ function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDel
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => onEditClick(cow)}>
-                        <PencilRuler className="h-4 w-4" />
-                        <span className="sr-only">Editar</span>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                        <span className="sr-only">Excluir</span>
-                    </Button>
+                    <div className="flex items-center justify-end">
+                      <Button variant="ghost" size="icon" onClick={() => onEditClick(cow)}>
+                          <PencilRuler className="h-4 w-4" />
+                          <span className="sr-only">Editar</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Excluir</span>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
