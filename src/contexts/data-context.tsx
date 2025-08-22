@@ -37,9 +37,9 @@ const getInitialData = (): Data => {
     const item = window.localStorage.getItem(DATA_STORAGE_KEY);
     const data = item ? JSON.parse(item) : { cows: [], births: [] };
 
-    const birthsWithId = (data.births || []).map((b: Birth) => ({
+    const birthsWithId = (data.births || []).map((b: any) => ({ // Use any to handle old data structure
       ...b,
-      id: b.id || crypto.randomUUID(), // Assign new UUID if missing
+      id: b.id || crypto.randomUUID(),
       date: b.date ? new Date(b.date) : undefined
     }));
 
@@ -111,7 +111,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             b.date && newBirth.date &&
             new Date(b.date).getTime() === new Date(newBirth.date).getTime()
         );
-        if (birth.date && birthExists) {
+        if (newBirth.date && birthExists) {
             return prevData;
         }
 
