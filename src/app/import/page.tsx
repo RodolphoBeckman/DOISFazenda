@@ -140,8 +140,6 @@ export default function ImportPage() {
   const handleImport = async () => {
     setIsLoadingImport(true);
 
-    const headers = previewData.headers.map(h => h ? String(h).trim().toLowerCase() : "");
-    
     const getColumnValue = (rowObject: {[key: string]: any}, keys: string[]): any => {
         for (const key of keys) {
             const normalizedKey = key.toLowerCase();
@@ -188,7 +186,7 @@ export default function ImportPage() {
                   ano: getColumnValue(rowData, ['Ano']),
               };
               
-              if (!cowData.id || cowData.id === 'undefined' || !cowData.animal || !cowData.origem || !cowData.farm || !cowData.lot || !cowData.location) {
+              if (!cowData.id || cowData.id === 'undefined' || !cowData.animal || !cowData.origem || !cowData.farm || !cowData.lot || !cowData.location || cowData.location === 'undefined') {
                   errorCount++;
                   continue;
               }
@@ -217,7 +215,19 @@ export default function ImportPage() {
               importedCount++;
 
           } else if (importType === 'nascimentos') {
+               const rawCowId = getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº']);
                const dateValue = getColumnValue(rowData, ['Data Nascimento', 'Data Nascim']);
+               const rawBreed = getColumnValue(rowData, ['Raça do Bezerro', 'Raça']);
+               const rawLot = getColumnValue(rowData, ['Lote']);
+               const rawFarm = getColumnValue(rowData, ['Fazenda']);
+               const rawLocation = getColumnValue(rowData, ['Localização', 'Local']);
+
+               // Strict check for required fields. If any are missing, skip the row silently.
+               if (!rawCowId || !dateValue || !rawBreed || !rawLot || !rawFarm || !rawLocation) {
+                  errorCount++;
+                  continue; 
+               }
+
                let parsedDate;
                if (dateValue) {
                    if (typeof dateValue === 'string') {
@@ -236,15 +246,10 @@ export default function ImportPage() {
                    }
                }
 
-               const rawCowId = getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº']);
-               const rawBreed = getColumnValue(rowData, ['Raça do Bezerro', 'Raça']);
-               const rawLot = getColumnValue(rowData, ['Lote']);
-               const rawFarm = getColumnValue(rowData, ['Fazenda']);
-               const rawLocation = getColumnValue(rowData, ['Localização', 'Local']);
-
-               if (!rawCowId || !parsedDate || isNaN(parsedDate.getTime()) || !rawBreed || !rawLot || !rawFarm || !rawLocation) {
-                  errorCount++;
-                  continue; 
+               // If after parsing, date is invalid, also skip.
+               if (!parsedDate || isNaN(parsedDate.getTime())) {
+                   errorCount++;
+                   continue;
                }
 
                let sexValue: 'Macho' | 'Fêmea' | 'Aborto' | undefined = undefined;
