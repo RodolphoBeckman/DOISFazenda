@@ -236,19 +236,19 @@ export default function ImportPage() {
                   continue; 
                }
 
-               let sexValue = getColumnValue(rowData, ['Sexo do Bezerro']);
-                if (typeof sexValue === 'string') {
-                    const lowerSex = sexValue.trim().toLowerCase();
-                    if (lowerSex.startsWith('f')) {
-                        sexValue = 'Fêmea';
-                    } else if (lowerSex.startsWith('m')) {
-                        sexValue = 'Macho';
-                    } else if (lowerSex.startsWith('a')) {
-                        sexValue = 'Aborto';
-                    }
-                } else {
-                    sexValue = undefined;
-                }
+               let sexValue: 'Macho' | 'Fêmea' | 'Aborto' | undefined = undefined;
+               const rawSexValue = getColumnValue(rowData, ['Sexo do Bezerro']);
+
+               if (typeof rawSexValue === 'string' && rawSexValue.trim() !== '') {
+                  const lowerSex = rawSexValue.trim().toLowerCase();
+                  if (lowerSex.startsWith('f')) {
+                      sexValue = 'Fêmea';
+                  } else if (lowerSex.startsWith('m')) {
+                      sexValue = 'Macho';
+                  } else if (lowerSex.startsWith('a')) {
+                      sexValue = 'Aborto';
+                  }
+               }
 
                const birthData = {
                   cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
