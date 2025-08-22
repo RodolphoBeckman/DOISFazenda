@@ -40,8 +40,9 @@ export type Birth = z.infer<typeof BirthSchema>;
 
 // Esquema para o Controle de IATF
 export const IATFSchema = z.object({
-  cowId: z.string(),
-  inseminationDate: z.date(),
+  id: z.string().optional(),
+  cowId: z.string({ required_error: "Selecione a vaca." }),
+  inseminationDate: z.date({ required_error: "A data de inseminação é obrigatória." }),
   bull: z.string().optional(),
   protocol: z.string().optional(),
   diagnosisDate: z.date().optional(),

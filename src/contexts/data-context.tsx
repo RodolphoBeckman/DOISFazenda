@@ -2,16 +2,18 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { type Cow, type Birth } from '@/lib/data-schemas';
+import { type Cow, type Birth, type IATF } from '@/lib/data-schemas';
 
 interface Data {
   cows: Cow[];
   births: Birth[];
+  iatfs: IATF[];
 }
 
 interface DataContextType {
   data: Cow[];
   births: Birth[];
+  iatfs: IATF[];
   addCow: (cow: Cow) => void;
   updateCow: (id: string, updatedCow: Cow) => void;
   deleteCow: (id: string) => void;
@@ -23,6 +25,9 @@ interface DataContextType {
   updateBirthsLotAndSex: (birthIds: string[], newLot: string | undefined, newSex: 'Macho' | 'Fêmea' | 'Aborto' | 'Não Definido' | undefined) => void;
   replaceCows: (newCows: Cow[]) => void;
   replaceBirths: (newBirths: Birth[]) => void;
+  addIATF: (iatf: IATF) => void;
+  updateIATF: (id: string, updatedIATF: IATF) => void;
+  deleteIATF: (id: string) => void;
 }
 
 const DATA_STORAGE_KEY = 'cattleLifeData';
@@ -31,25 +36,33 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 const getInitialData = (): Data => {
   if (typeof window === 'undefined') {
-    return { cows: [], births: [] };
+    return { cows: [], births: [], iatfs: [] };
   }
   try {
     const item = window.localStorage.getItem(DATA_STORAGE_KEY);
-    const data = item ? JSON.parse(item) : { cows: [], births: [] };
+    const data = item ? JSON.parse(item) : { cows: [], births: [], iatfs: [] };
 
     const birthsWithId = (data.births || []).map((b: any) => ({ // Use any to handle old data structure
       ...b,
       id: b.id || crypto.randomUUID(),
       date: b.date ? new Date(b.date) : undefined
     }));
+    
+    const iatfsWithId = (data.iatfs || []).map((i: any) => ({
+      ...i,
+      id: i.id || crypto.randomUUID(),
+      inseminationDate: i.inseminationDate ? new Date(i.inseminationDate) : undefined,
+      diagnosisDate: i.diagnosisDate ? new Date(i.diagnosisDate) : undefined,
+    }));
 
     return {
       cows: data.cows || [],
-      births: birthsWithId
+      births: birthsWithId,
+      iatfs: iatfsWithId
     };
   } catch (error) {
     console.warn(`Error reading localStorage key “${DATA_STORAGE_KEY}”:`, error);
-    return { cows: [], births: [] };
+    return { cows: [], births: [], iatfs: [] };
   }
 };
 
@@ -158,6 +171,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       const newBirths = prevData.births.filter(b => b.id !== birth.id);
 
       return {
+        ...prevData,
         cows: newCows,
         births: newBirths,
       };
@@ -199,10 +213,35 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const addIATF = (iatf: IATF) => {
+    setData(prevData => {
+      const newIATF = { ...iatf, id: iatf.id || crypto.randomUUID() };
+      return {
+        ...prevData,
+        iatfs: [...prevData.iatfs, newIATF],
+      };
+    });
+  };
+
+  const updateIATF = (id: string, updatedIATF: IATF) => {
+    setData(prevData => ({
+      ...prevData,
+      iatfs: prevData.iatfs.map(i => (i.id === id ? { ...i, ...updatedIATF } : i)),
+    }));
+  };
+
+  const deleteIATF = (id: string) => {
+    setData(prevData => ({
+      ...prevData,
+      iatfs: prevData.iatfs.filter(i => i.id !== id),
+    }));
+  };
+
   return (
     <DataContext.Provider value={{ 
       data: data.cows, 
       births: data.births, 
+      iatfs: data.iatfs,
       addCow, 
       updateCow, 
       deleteCow, 
@@ -213,7 +252,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       transferBirthToCow,
       updateBirthsLotAndSex,
       replaceCows,
-      replaceBirths
+      replaceBirths,
+      addIATF,
+      updateIATF,
+      deleteIATF,
     }}>
       {children}
     </DataContext.Provider>
@@ -227,6 +269,3 @@ export const useData = () => {
   }
   return context;
 };
-
-
-    
