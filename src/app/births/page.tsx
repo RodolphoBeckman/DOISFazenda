@@ -416,7 +416,7 @@ function CardWithTable({ title, data, allData, renderFilterableHeader, onEditCli
             <TableBody>
               {data.map((birth, index) => (
                 <TableRow 
-                  key={birth.id || `${birth.cowId}-${index}`}
+                  key={`${birth.id}-${birth.cowId}-${index}`}
                   data-state={birth.id && selectedBirths.includes(birth.id) ? "selected" : ""}
                 >
                    <TableCell>
