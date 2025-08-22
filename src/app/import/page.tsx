@@ -11,10 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 import { useToast } from '@/hooks/use-toast';
 import { useData } from '@/contexts/data-context';
 import { useSettings } from '@/contexts/settings-context';
-import { CowSchema, BirthSchema } from '@/lib/data-schemas';
+import { CowSchema, BirthSchema, type Cow, type Birth } from '@/lib/data-schemas';
 
 type ParsedData = {
   headers: string[];
@@ -26,7 +29,7 @@ type FullParsedData = (string | number | null)[][];
 
 export default function ImportPage() {
   const { toast } = useToast();
-  const { data: cows, births, addCow, addBirth } = useData();
+  const { addCow, addBirth, replaceCows, replaceBirths } = useData();
   const { settings, addSettingItem } = useSettings();
   
   const [file, setFile] = useState<File | null>(null);
@@ -36,6 +39,9 @@ export default function ImportPage() {
   const [previewData, setPreviewData] = useState<ParsedData>({ headers: [], rows: [] });
   const [fullData, setFullData] = useState<FullParsedData>([]);
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [replaceData, setReplaceData] = useState<boolean>(false);
+  const [isAlertOpen, setIsAlertOpen] = useState<boolean>(false);
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -113,8 +119,8 @@ export default function ImportPage() {
       setIsLoadingPreview(false);
     }
   };
-
-  const handleImport = async () => {
+  
+  const triggerImport = () => {
     if (!showPreview || fullData.length === 0) {
       toast({
         variant: 'destructive',
@@ -123,6 +129,15 @@ export default function ImportPage() {
       });
       return;
     }
+
+    if (replaceData) {
+      setIsAlertOpen(true);
+    } else {
+      handleImport();
+    }
+  };
+
+  const handleImport = async () => {
     setIsLoadingImport(true);
 
     const headers = previewData.headers.map(h => h ? String(h).trim() : "");
@@ -138,6 +153,8 @@ export default function ImportPage() {
 
     let importedCount = 0;
     let errorCount = 0;
+    const newCows: Cow[] = [];
+    const newBirths: Birth[] = [];
 
     for (const row of fullData) {
         if (!row || row.every(cell => cell === null || cell === '')) {
@@ -175,10 +192,6 @@ export default function ImportPage() {
                   errorCount++;
                   continue;
               }
-              
-              if (cows.some(c => c.id.trim().toLowerCase() === cowData.id.trim().toLowerCase())) {
-                  continue;
-              }
 
               const newFarm = cowData.farm;
               if (newFarm && !settings.farms.some(f => f.name.trim().toLowerCase() === newFarm.trim().toLowerCase())) {
@@ -190,7 +203,11 @@ export default function ImportPage() {
               }
 
               const cow = CowSchema.parse(cowData);
-              addCow(cow);
+              if (replaceData) {
+                  newCows.push(cow);
+              } else {
+                  addCow(cow);
+              }
               importedCount++;
 
           } else if (importType === 'nascimentos') {
@@ -199,10 +216,10 @@ export default function ImportPage() {
                if (typeof dateValue === 'string') {
                  const parts = dateValue.split(/[/.-]/);
                  if (parts.length === 3) {
-                    const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2]) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
                     const day = parts[0];
                     const month = parts[1];
-                    const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00`;
+                    const year = parts[2].length === 4 ? parts[2] : (parseInt(parts[2]) > 50 ? `19${parts[2]}`: `20${parts[2]}`);
+                    const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00Z`;
                     parsedDate = new Date(isoDateString);
                  } else {
                     parsedDate = new Date(dateValue);
@@ -220,8 +237,8 @@ export default function ImportPage() {
                }
 
                let sexValue = getColumnValue(rowData, ['Sexo do Bezerro']);
-               if (typeof sexValue === 'string') {
-                    const lowerSex = sexValue.toLowerCase();
+                if (typeof sexValue === 'string') {
+                    const lowerSex = sexValue.trim().toLowerCase();
                     if (lowerSex.startsWith('f')) {
                         sexValue = 'Fêmea';
                     } else if (lowerSex.startsWith('m')) {
@@ -229,9 +246,9 @@ export default function ImportPage() {
                     } else if (lowerSex.startsWith('a')) {
                         sexValue = 'Aborto';
                     }
-               } else {
-                 sexValue = undefined;
-               }
+                } else {
+                    sexValue = undefined;
+                }
 
                const birthData = {
                   cowId: String(getColumnValue(rowData, ['Brinco Nº (Mãe)', 'Brinco Nº'])),
@@ -257,11 +274,6 @@ export default function ImportPage() {
                   errorCount++;
                   continue;
               }
-
-
-              if (births.some(b => b.cowId.trim().toLowerCase() === birthData.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === parsedDate.toDateString())) {
-                continue;
-              }
                
               const validatedBirthData = {
                 ...birthData,
@@ -282,12 +294,24 @@ export default function ImportPage() {
               }
 
               const birth = BirthSchema.parse(validatedBirthData);
-              addBirth(birth);
+              if (replaceData) {
+                  newBirths.push(birth);
+              } else {
+                  addBirth(birth);
+              }
               importedCount++;
           }
         } catch (e) {
             errorCount++;
             console.error('Validation Error on row:', rowData, e);
+        }
+    }
+    
+    if (replaceData) {
+        if (importType === 'vacas') {
+            replaceCows(newCows);
+        } else if (importType === 'nascimentos') {
+            replaceBirths(newBirths);
         }
     }
 
@@ -316,6 +340,7 @@ export default function ImportPage() {
   };
 
   return (
+    <>
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight font-headline">
@@ -354,6 +379,15 @@ export default function ImportPage() {
                 Arquivo selecionado: <span className="font-medium">{file.name}</span>
             </div>
             )}
+             <div className="flex items-center space-x-2">
+                <Switch 
+                  id="replace-data" 
+                  checked={replaceData} 
+                  onCheckedChange={setReplaceData} 
+                  disabled={isLoadingPreview || isLoadingImport}
+                />
+                <Label htmlFor="replace-data">Substituir dados existentes</Label>
+            </div>
 
         </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t pt-6">
@@ -361,7 +395,7 @@ export default function ImportPage() {
                 {isLoadingPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
                 Pré-visualizar
             </Button>
-            <Button onClick={handleImport} disabled={!showPreview || fullData.length === 0 || isLoadingImport || isLoadingPreview}>
+            <Button onClick={triggerImport} disabled={!showPreview || fullData.length === 0 || isLoadingImport || isLoadingPreview}>
             {isLoadingImport ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -390,7 +424,7 @@ export default function ImportPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                {previewData.headers.map((header) => <TableHead key={header}>{header}</TableHead>)}
+                                {previewData.headers.map((header, index) => <TableHead key={`${header}-${index}`}>{header}</TableHead>)}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -412,5 +446,27 @@ export default function ImportPage() {
       )}
 
     </main>
+     <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é irreversível. Todos os registros de 
+              <span className="font-bold"> {importType === 'vacas' ? 'vacas' : 'nascimentos'} </span>
+              existentes serão <span className="font-bold text-destructive">excluídos permanentemente</span> e substituídos pelos dados do arquivo. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setIsAlertOpen(false);
+              handleImport();
+            }}>
+              Sim, substituir dados
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

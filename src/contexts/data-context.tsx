@@ -17,6 +17,8 @@ interface DataContextType {
   deleteCow: (id: string) => void;
   updateCowsLot: (ids: string[], newLot: string) => void;
   addBirth: (birth: Birth) => void;
+  replaceCows: (newCows: Cow[]) => void;
+  replaceBirths: (newBirths: Birth[]) => void;
 }
 
 const DATA_STORAGE_KEY = 'cattleLifeData';
@@ -29,7 +31,12 @@ const getInitialData = (): Data => {
   }
   try {
     const item = window.localStorage.getItem(DATA_STORAGE_KEY);
-    return item ? JSON.parse(item) : { cows: [], births: [] };
+    const data = item ? JSON.parse(item) : { cows: [], births: [] };
+    // Ensure both are arrays, initialize if missing
+    return {
+      cows: data.cows || [],
+      births: data.births || []
+    };
   } catch (error) {
     console.warn(`Error reading localStorage key “${DATA_STORAGE_KEY}”:`, error);
     return { cows: [], births: [] };
@@ -49,10 +56,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
 
   const addCow = (cow: Cow) => {
-    setData((prevData) => ({
-      ...prevData,
-      cows: [...prevData.cows, cow],
-    }));
+    setData((prevData) => {
+      // Avoid adding duplicates
+      if (prevData.cows.some(c => c.id.trim().toLowerCase() === cow.id.trim().toLowerCase())) {
+        return prevData;
+      }
+      return {
+        ...prevData,
+        cows: [...prevData.cows, cow],
+      }
+    });
   };
 
   const updateCow = (id: string, updatedCow: Cow) => {
@@ -79,14 +92,44 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const addBirth = (birth: Birth) => {
-    setData((prevData) => ({
+    setData((prevData) => {
+        // Avoid adding duplicates
+        if (prevData.births.some(b => b.cowId.trim().toLowerCase() === birth.cowId.trim().toLowerCase() && new Date(b.date).toDateString() === new Date(birth.date).toDateString())) {
+            return prevData;
+        }
+        return {
+            ...prevData,
+            births: [...prevData.births, birth],
+        };
+    });
+  };
+
+  const replaceCows = (newCows: Cow[]) => {
+    setData(prevData => ({
       ...prevData,
-      births: [...prevData.births, birth],
+      cows: newCows,
+    }));
+  };
+
+  const replaceBirths = (newBirths: Birth[]) => {
+    setData(prevData => ({
+      ...prevData,
+      births: newBirths,
     }));
   };
 
   return (
-    <DataContext.Provider value={{ data: data.cows, births: data.births, addCow, updateCow, deleteCow, updateCowsLot, addBirth }}>
+    <DataContext.Provider value={{ 
+      data: data.cows, 
+      births: data.births, 
+      addCow, 
+      updateCow, 
+      deleteCow, 
+      updateCowsLot, 
+      addBirth,
+      replaceCows,
+      replaceBirths
+    }}>
       {children}
     </DataContext.Provider>
   );
@@ -99,5 +142,3 @@ export const useData = () => {
   }
   return context;
 };
-
-    
