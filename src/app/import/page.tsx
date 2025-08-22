@@ -144,8 +144,19 @@ export default function ImportPage() {
     
     const getColumnValue = (rowObject: {[key: string]: any}, keys: string[]): any => {
         for (const key of keys) {
-            if (rowObject.hasOwnProperty(key)) {
-                return rowObject[key];
+            const keyVariations = [key, key.toLowerCase(), key.replace(/\s/g, ''), key.normalize("NFD").replace(/[\u0300-\u036f]/g, "")];
+            for (const variation of keyVariations) {
+                 if (rowObject.hasOwnProperty(variation)) {
+                    return rowObject[variation];
+                 }
+            }
+            // Check for case-insensitive and variation matches in the rowObject keys
+            for (const rowKey in rowObject) {
+                 const normalizedRowKey = rowKey.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                 const normalizedKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                 if (normalizedRowKey === normalizedKey) {
+                    return rowObject[rowKey];
+                 }
             }
         }
         return undefined;
@@ -174,7 +185,7 @@ export default function ImportPage() {
                   origem: getColumnValue(rowData, ['Origem']),
                   farm: getColumnValue(rowData, ['Fazenda']),
                   lot: getColumnValue(rowData, ['Lote']),
-                  location: getColumnValue(rowData, ['Localização']),
+                  location: getColumnValue(rowData, ['Localização', 'Local']),
                   registrationStatus: getColumnValue(rowData, ['Status do Cadastro']) || 'Ativo',
                   loteT: getColumnValue(rowData, ['Lote T.']),
                   obs1: getColumnValue(rowData, ['Obs: 1']),
@@ -457,7 +468,7 @@ export default function ImportPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</Button>
             <AlertDialogAction onClick={() => {
               setIsAlertOpen(false);
               handleImport();
@@ -470,3 +481,5 @@ export default function ImportPage() {
     </>
   );
 }
+
+    
