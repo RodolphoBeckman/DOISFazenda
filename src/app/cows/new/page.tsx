@@ -2,6 +2,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from 'next/navigation'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -27,21 +28,10 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { useSettings } from "@/contexts/settings-context"
+import { useData } from "@/contexts/data-context"
+import { CowSchema } from "@/lib/data-schemas"
 
-const FormSchema = z.object({
-  id: z.string().min(1, "O ID da vaca é obrigatório."),
-  animal: z.string().min(1, "O tipo de animal é obrigatório."),
-  origem: z.string({ required_error: "Selecione a origem." }),
-  farm: z.string({ required_error: "Selecione a fazenda." }),
-  lot: z.string({ required_error: "Selecione o lote." }),
-  location: z.string().min(1, "A localização é obrigatória."),
-  status: z.enum(["Prenha", "Vazia", "Com cria"], {
-    required_error: "Selecione o status.",
-  }),
-  registrationStatus: z.enum(["Ativo", "Inativo"], { required_error: "Selecione o status do cadastro."}),
-});
-
-type FormValues = z.infer<typeof FormSchema>;
+type FormValues = z.infer<typeof CowSchema>;
 
 // Data for selectors
 const statuses: string[] = ["Vazia", "Prenha", "Com cria"];
@@ -49,11 +39,13 @@ const origins: string[] = ["Nascimento", "Compra", "Transferência"]; // Example
 const registrationStatuses: string[] = ["Ativo", "Inativo"];
 
 export default function NewCowPage() {
+  const router = useRouter()
   const { toast } = useToast()
   const { settings } = useSettings();
+  const { addCow } = useData();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(CowSchema),
     defaultValues: {
       id: "",
       animal: "",
@@ -67,11 +59,12 @@ export default function NewCowPage() {
   });
 
   function onSubmit(data: FormValues) {
-    console.log(data);
+    addCow(data);
     toast({
       title: "Sucesso!",
       description: "Vaca registrada com sucesso.",
     })
+    router.push('/cows');
   }
 
   return (

@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppLayout } from "@/components/layout/app-layout";
 import { SettingsProvider } from "@/contexts/settings-context";
+import { DataProvider } from "@/contexts/data-context";
 
 export const metadata: Metadata = {
   title: "CattleLife - Controle de Vacas Paridas",
@@ -31,10 +32,12 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <SettingsProvider>
-          <SidebarProvider>
-            <AppLayout>{children}</AppLayout>
-            <Toaster />
-          </SidebarProvider>
+          <DataProvider>
+            <SidebarProvider>
+              <AppLayout>{children}</AppLayout>
+              <Toaster />
+            </SidebarProvider>
+          </DataProvider>
         </SettingsProvider>
       </body>
     </html>

@@ -33,30 +33,20 @@ import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { useSettings } from "@/contexts/settings-context"
+import { useRouter } from "next/navigation"
+import { useData } from "@/contexts/data-context"
+import { BirthSchema } from "@/lib/data-schemas"
 
-const FormSchema = z.object({
-  cowId: z.string({ required_error: "Selecione a vaca." }),
-  date: z.date({ required_error: "A data de nascimento é obrigatória." }),
-  sex: z.enum(["Macho", "Fêmea"], { required_error: "Selecione o sexo." }),
-  breed: z.string().optional(),
-  sire: z.string().optional(),
-  lot: z.string({ required_error: "Selecione o lote." }),
-  farm: z.string({ required_error: "Selecione a fazenda." }),
-  location: z.string().min(1, "A localização é obrigatória."),
-  observations: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof FormSchema>;
-
-// Data for selectors - in a real app, this would come from a database or API
-const cows: { id: string, farm: string }[] = [];
+type FormValues = z.infer<typeof BirthSchema>;
 
 export default function NewBirthPage() {
   const { toast } = useToast()
   const { settings } = useSettings();
+  const { data: cows, addBirth } = useData();
+  const router = useRouter();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(BirthSchema),
     defaultValues: {
       cowId: "",
       sex: undefined,
@@ -70,11 +60,12 @@ export default function NewBirthPage() {
   });
 
   function onSubmit(data: FormValues) {
-    console.log(data);
+    addBirth(data);
     toast({
       title: "Sucesso!",
       description: "Nascimento registrado com sucesso.",
     })
+    router.push('/births');
   }
 
   return (
