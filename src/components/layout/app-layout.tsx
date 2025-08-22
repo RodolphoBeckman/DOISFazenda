@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   Home,
   Import,
@@ -32,13 +33,13 @@ const navItems = [
 
 function Logo() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8 text-primary">
-      <path d="M18.5 6.5C18.5 8.43 17.57 10 16 10s-2.5-1.57-2.5-3.5S14.43 3 16 3s2.5 1.57 2.5 3.5Z"/>
-      <path d="M14 11.5c0 2.5 2 4.5 4 4.5s4-2 4-4.5"/>
-      <path d="M4 14.5c0 2.5 2 4.5 4 4.5s4-2 4-4.5"/>
-      <path d="M2 9.5C2 11.43 2.93 13 4.5 13S7 11.43 7 9.5 6.07 6 4.5 6 2 7.57 2 9.5Z"/>
-      <path d="m14 7 2 3"/><path d="m5 8 2 3"/>
-    </svg>
+    <Image 
+      src="/logo.svg" 
+      alt="DOIS Logo" 
+      width={32} 
+      height={32} 
+      className="h-8 w-8 text-primary"
+    />
   );
 }
 
