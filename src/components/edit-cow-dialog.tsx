@@ -140,7 +140,7 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                         </FormControl>
                         <SelectContent>
                             {settings.farms.map((farm) => (
-                            <SelectItem key={farm.id} value={farm.name}>{farm.name}</SelectItem>
+                            <SelectItem key={`${farm.id}-${farm.name}`} value={farm.name}>{farm.name}</SelectItem>
                             ))}
                         </SelectContent>
                         </Select>
@@ -163,7 +163,7 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                         </FormControl>
                         <SelectContent>
                             {settings.lots.map((lot) => (
-                            <SelectItem key={lot.id} value={lot.name}>{lot.name}</SelectItem>
+                            <SelectItem key={`${lot.id}-${lot.name}`} value={lot.name}>{lot.name}</SelectItem>
                             ))}
                         </SelectContent>
                         </Select>
