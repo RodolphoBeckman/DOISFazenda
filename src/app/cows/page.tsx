@@ -484,7 +484,7 @@ function CardWithTable({
             Total de registros: {fullDataCount}
         </div>
       </div>
-      <div className="p-0">
+      <div className="p-0 overflow-x-auto">
         <Table>
             <TableHeader>
               <TableRow>
@@ -587,3 +587,6 @@ function CardWithTable({
     </div>
   );
 }
+
+
+    
