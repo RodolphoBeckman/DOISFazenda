@@ -235,7 +235,7 @@ export default function NewBirthPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o lote..." />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {settings.lots.map((lot) => (
@@ -257,7 +257,7 @@ export default function NewBirthPage() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a fazenda..." />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {settings.farms.map(farm => (
@@ -335,3 +335,5 @@ export default function NewBirthPage() {
     </main>
   );
 }
+
+    
