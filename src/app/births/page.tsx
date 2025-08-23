@@ -259,7 +259,7 @@ export default function BirthsPage() {
                     <ArrowDownAZ className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
                     Ascendente
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleSort(column)}>
+                <DropdownMenuItem onClick={()={() => handleSort(column)}>
                     <ArrowUpAZ className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
                     Descendente
                 </DropdownMenuItem>
@@ -539,9 +539,8 @@ function CardWithTable({
             Total de registros: {fullDataCount}
         </div>
       </div>
-      <div className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
+      <div className="overflow-x-auto p-0">
+        <Table>
             <TableHeader>
               <TableRow>
                  <TableHead className="w-[50px]">
@@ -628,7 +627,6 @@ function CardWithTable({
               ))}
             </TableBody>
           </Table>
-        </div>
       </div>
       <div className="flex items-center justify-between p-4 border-t">
           <div className="flex items-center gap-2">
@@ -656,5 +654,7 @@ function CardWithTable({
   );
 }
 
+
+    
 
     
