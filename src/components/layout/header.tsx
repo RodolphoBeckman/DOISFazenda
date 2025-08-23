@@ -43,7 +43,6 @@ function Logo() {
         height={40} 
         className="h-10 w-10"
       />
-      <span className="font-headline text-lg font-bold hidden sm:inline-block">DOIS</span>
     </Link>
   );
 }
