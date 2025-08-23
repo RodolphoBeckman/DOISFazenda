@@ -50,11 +50,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" side="left">
-        <SidebarHeader className="h-24 flex items-center justify-between p-2">
-          <div className="flex items-center justify-center flex-grow group-data-[collapsible=icon]:hidden">
-             <Logo />
-          </div>
-          <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
+        <SidebarHeader className="relative h-24 flex items-center justify-center p-2 group-data-[collapsible=icon]:h-12">
+            <div className="flex items-center justify-center flex-grow group-data-[collapsible=icon]:hidden">
+                <Logo />
+            </div>
+            <SidebarTrigger className="absolute top-2 right-2 group-data-[collapsible=icon]:hidden" />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
