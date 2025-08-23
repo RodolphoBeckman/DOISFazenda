@@ -59,7 +59,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
+      <div className="container flex h-16 items-center justify-between">
         {/* Left section for Logo */}
         <div className="flex items-center">
           <Logo />
@@ -75,7 +75,7 @@ export default function Header() {
         </nav>
 
         {/* Right section for Actions */}
-        <div className="flex items-center justify-end md:w-[100px]">
+        <div className="flex items-center justify-end md:w-auto">
            <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={handleLogout} title="Sair">
                 <LogOut className="h-5 w-5" />
            </Button>
