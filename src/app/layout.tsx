@@ -2,7 +2,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppLayout } from "@/components/layout/app-layout";
 import { SettingsProvider } from "@/contexts/settings-context";
 import { DataProvider } from "@/contexts/data-context";
@@ -38,10 +37,8 @@ export default function RootLayout({
          <AuthProvider>
             <SettingsProvider>
             <DataProvider>
-                <SidebarProvider>
                 <AppLayout>{children}</AppLayout>
                 <Toaster />
-                </SidebarProvider>
             </DataProvider>
             </SettingsProvider>
         </AuthProvider>
