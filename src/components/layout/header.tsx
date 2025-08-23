@@ -39,9 +39,9 @@ function Logo() {
       <Image 
         src="/Icone DOIS.png" 
         alt="DOIS Logo" 
-        width={40} 
-        height={40} 
-        className="h-10 w-10"
+        width={48} 
+        height={48} 
+        className="h-12 w-12"
       />
     </Link>
   );
@@ -60,7 +60,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           <Logo />
           <nav className="hidden md:flex md:gap-4">
             {navItems.map((item) => (
