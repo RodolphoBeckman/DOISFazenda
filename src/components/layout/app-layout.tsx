@@ -37,9 +37,9 @@ function Logo() {
     <Image 
       src="/Icone DOIS.png" 
       alt="DOIS Logo" 
-      width={40} 
-      height={40} 
-      className="h-10 w-10"
+      width={80} 
+      height={80} 
+      className="h-20 w-20"
     />
   );
 }
@@ -50,7 +50,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar collapsible="icon" side="left">
-        <SidebarHeader className="h-16 flex items-center justify-between p-2">
+        <SidebarHeader className="h-24 flex items-center justify-between p-2">
           <div className="flex items-center justify-center flex-grow group-data-[collapsible=icon]:hidden">
              <Logo />
           </div>
