@@ -11,6 +11,7 @@ import {
   Baby,
   Beaker,
   LogOut,
+  PanelLeft,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -24,9 +25,11 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { Skeleton } from "../ui/skeleton";
+import { useSidebar } from "../ui/sidebar";
 
 const navItems = [
   { href: "/", icon: Home, label: "Dashboard" },
@@ -53,6 +56,8 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, isLoading, logout } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
+    const { toggleSidebar } = useSidebar();
+
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -122,7 +127,18 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="flex-1">{children}</SidebarInset>
+      <SidebarInset className="flex-1 relative">
+         <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 left-4 h-8 w-8 md:hidden"
+            onClick={toggleSidebar}
+          >
+            <PanelLeft />
+            <span className="sr-only">Toggle Sidebar</span>
+          </Button>
+        {children}
+      </SidebarInset>
     </div>
   );
 }
