@@ -1,0 +1,21 @@
+{
+  "name": "DOIS - Controle de Vacas Paridas",
+  "short_name": "DOIS",
+  "description": "Gestão de gado de corte: nascimentos, IATF, lotes e mais.",
+  "icons": [
+    {
+      "src": "/Icone DOIS.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Icone DOIS.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "fullscreen",
+  "background_color": "#F5F5DC",
+  "theme_color": "#A7BE78"
+}

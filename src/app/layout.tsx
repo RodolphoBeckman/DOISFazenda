@@ -11,6 +11,7 @@ import { AuthProvider } from "@/contexts/auth-context";
 export const metadata: Metadata = {
   title: "DOIS - Controle de Vacas Paridas",
   description: "Gestão de gado de corte: nascimentos, IATF, lotes e mais.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
