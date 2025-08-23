@@ -28,6 +28,7 @@ interface DataContextType {
   addIATF: (iatf: IATF) => void;
   updateIATF: (id: string, updatedIATF: IATF) => void;
   deleteIATF: (id: string) => void;
+  replaceAllData: (data: Data) => void;
 }
 
 const DATA_STORAGE_KEY = 'doisData';
@@ -76,6 +77,26 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
        console.warn(`Error setting localStorage key “${DATA_STORAGE_KEY}”:`, error);
     }
   }, [data]);
+
+  const replaceAllData = (newData: Data) => {
+    // Ensure dates are converted back to Date objects after parsing from JSON
+    const parsedBirths = (newData.births || []).map((b: any) => ({
+      ...b,
+      id: b.id || crypto.randomUUID(),
+      date: b.date ? new Date(b.date) : undefined,
+    }));
+    const parsedIatfs = (newData.iatfs || []).map((i: any) => ({
+      ...i,
+      id: i.id || crypto.randomUUID(),
+      inseminationDate: i.inseminationDate ? new Date(i.inseminationDate) : undefined,
+      diagnosisDate: i.diagnosisDate ? new Date(i.diagnosisDate) : undefined,
+    }));
+    setData({
+      cows: newData.cows || [],
+      births: parsedBirths,
+      iatfs: parsedIatfs,
+    });
+  };
 
 
   const addCow = (cow: Cow) => {
@@ -256,6 +277,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       addIATF,
       updateIATF,
       deleteIATF,
+      replaceAllData,
     }}>
       {children}
     </DataContext.Provider>

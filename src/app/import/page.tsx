@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { FileUp, Loader2, Upload } from 'lucide-react';
+import { FileUp, Loader2, Upload, Download, UploadCloud } from 'lucide-react';
 import * as xlsx from 'xlsx';
 
 import { Button } from '@/components/ui/button';
@@ -29,10 +29,11 @@ type FullParsedData = (string | number | null)[][];
 
 export default function ImportPage() {
   const { toast } = useToast();
-  const { addCow, addBirth, replaceCows, replaceBirths } = useData();
+  const { data, births, iatfs, addCow, addBirth, replaceCows, replaceBirths, replaceAllData } = useData();
   const { settings, addSettingItem } = useSettings();
   
-  const [file, setFile] = useState<File | null>(null);
+  // State for Sheet Import
+  const [sheetFile, setSheetFile] = useState<File | null>(null);
   const [importType, setImportType] = useState<string>("");
   const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
   const [isLoadingImport, setIsLoadingImport] = useState<boolean>(false);
@@ -41,13 +42,18 @@ export default function ImportPage() {
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [replaceData, setReplaceData] = useState<boolean>(false);
   const [isAlertOpen, setIsAlertOpen] = useState<boolean>(false);
+  
+  // State for Backup/Restore
+  const [backupFile, setBackupFile] = useState<File | null>(null);
+  const [isRestoreLoading, setIsRestoreLoading] = useState(false);
+  const [isRestoreAlertOpen, setIsRestoreAlertOpen] = useState(false);
 
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSheetFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
         if (selectedFile.type === "text/csv" || selectedFile.name.endsWith('.csv') || selectedFile.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || selectedFile.name.endsWith('.xlsx')) {
-            setFile(selectedFile);
+            setSheetFile(selectedFile);
             setShowPreview(false);
             setPreviewData({ headers: [], rows: [] });
             setFullData([]);
@@ -91,7 +97,7 @@ export default function ImportPage() {
   };
 
   const handlePreview = async () => {
-    if (!file || !importType) {
+    if (!sheetFile || !importType) {
       toast({
         variant: 'destructive',
         title: 'Faltam informações',
@@ -104,7 +110,7 @@ export default function ImportPage() {
     setShowPreview(true);
 
     try {
-      const { preview, full } = await parseFile(file);
+      const { preview, full } = await parseFile(sheetFile);
       setPreviewData(preview);
       setFullData(full);
     } catch (error) {
@@ -347,21 +353,127 @@ export default function ImportPage() {
         });
     }
 
-    setFile(null);
+    setSheetFile(null);
     setImportType("");
     setShowPreview(false);
     setPreviewData({ headers: [], rows: [] });
     setFullData([]);
-    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    const fileInput = document.getElementById('sheet-file-upload') as HTMLInputElement;
     if(fileInput) fileInput.value = '';
+  };
+
+  const handleExportAllData = () => {
+    try {
+      const allData = {
+        cows: data,
+        births,
+        iatfs
+      };
+      const jsonString = JSON.stringify(allData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const date = new Date().toISOString().slice(0, 10);
+      link.download = `dois-backup-${date}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast({
+        title: 'Exportação Concluída',
+        description: 'O backup do banco de dados foi baixado com sucesso.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro na Exportação',
+        description: 'Não foi possível exportar os dados.',
+      });
+      console.error('Export error:', error);
+    }
+  };
+
+  const handleBackupFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      if (selectedFile.type === 'application/json' || selectedFile.name.endsWith('.json')) {
+        setBackupFile(selectedFile);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Tipo de arquivo inválido',
+          description: 'Por favor, selecione um arquivo de backup .json.',
+        });
+        event.target.value = '';
+      }
+    }
+  };
+
+  const triggerRestore = () => {
+    if (!backupFile) {
+      toast({
+        variant: 'destructive',
+        title: 'Nenhum arquivo selecionado',
+        description: 'Por favor, selecione um arquivo de backup para restaurar.',
+      });
+      return;
+    }
+    setIsRestoreAlertOpen(true);
+  };
+
+  const handleRestoreData = () => {
+    if (!backupFile) return;
+
+    setIsRestoreLoading(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const restoredData = JSON.parse(text);
+        
+        // Basic validation to check if it looks like our data structure
+        if ('cows' in restoredData && 'births' in restoredData && 'iatfs' in restoredData) {
+          replaceAllData(restoredData);
+          toast({
+            title: 'Restauração Concluída!',
+            description: 'Os dados foram restaurados com sucesso a partir do backup.',
+          });
+          setBackupFile(null);
+          const fileInput = document.getElementById('backup-file-upload') as HTMLInputElement;
+          if (fileInput) fileInput.value = '';
+        } else {
+          throw new Error('Formato de arquivo de backup inválido.');
+        }
+
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro na Restauração',
+          description: 'O arquivo de backup é inválido ou está corrompido. Nenhuma alteração foi feita.',
+        });
+        console.error('Restore error:', error);
+      } finally {
+        setIsRestoreLoading(false);
+      }
+    };
+    reader.onerror = () => {
+       toast({
+          variant: 'destructive',
+          title: 'Erro de Leitura',
+          description: 'Não foi possível ler o arquivo selecionado.',
+        });
+       setIsRestoreLoading(false);
+    }
+    reader.readAsText(backupFile);
   };
 
   return (
     <>
-      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <main className="flex-1 space-y-6 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Importar Dados
+            Importar e Exportar Dados
           </h1>
         </div>
 
@@ -387,13 +499,13 @@ export default function ImportPage() {
                   </Select>
               </div>
               <div className="grid w-full max-w-sm items-center gap-1.5">
-                  <Label htmlFor="file-upload">Arquivo (CSV, XLSX)</Label>
-                  <Input id="file-upload" type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" onChange={handleFileChange} disabled={isLoadingPreview || isLoadingImport} />
+                  <Label htmlFor="sheet-file-upload">Arquivo (CSV, XLSX)</Label>
+                  <Input id="sheet-file-upload" type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" onChange={handleSheetFileChange} disabled={isLoadingPreview || isLoadingImport} />
               </div>
             </div>
-            {file && (
+            {sheetFile && (
               <div className="text-sm text-muted-foreground">
-                  Arquivo selecionado: <span className="font-medium">{file.name}</span>
+                  Arquivo selecionado: <span className="font-medium">{sheetFile.name}</span>
               </div>
               )}
               <div className="flex items-center space-x-2">
@@ -403,12 +515,12 @@ export default function ImportPage() {
                     onCheckedChange={setReplaceData} 
                     disabled={isLoadingPreview || isLoadingImport}
                   />
-                  <Label htmlFor="replace-data">Substituir dados existentes</Label>
+                  <Label htmlFor="replace-data">Substituir dados existentes na importação da planilha</Label>
               </div>
 
           </CardContent>
           <CardFooter className="flex justify-end gap-2 border-t pt-6">
-              <Button onClick={handlePreview} variant="outline" disabled={!file || !importType || isLoadingPreview || isLoadingImport}>
+              <Button onClick={handlePreview} variant="outline" disabled={!sheetFile || !importType || isLoadingPreview || isLoadingImport}>
                   {isLoadingPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
                   Pré-visualizar
               </Button>
@@ -418,7 +530,7 @@ export default function ImportPage() {
               ) : (
                   <Upload className="mr-2 h-4 w-4" />
               )}
-              Importar Dados
+              Importar Planilha
             </Button>
           </CardFooter>
         </Card>
@@ -426,7 +538,7 @@ export default function ImportPage() {
         {showPreview && (
           <Card className="w-full max-w-3xl mx-auto mt-6">
               <CardHeader>
-                  <CardTitle>Pré-visualização dos Dados</CardTitle>
+                  <CardTitle>Pré-visualização dos Dados da Planilha</CardTitle>
                   <CardDescription>
                       Confira se as colunas e os dados estão corretos antes de importar. Serão exibidas as 3 primeiras linhas do arquivo como exemplo.
                   </CardDescription>
@@ -462,6 +574,54 @@ export default function ImportPage() {
           </Card>
         )}
 
+        <Card className="w-full max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle>Backup e Restauração</CardTitle>
+            <CardDescription>
+             Salve todos os dados do aplicativo em um arquivo ou restaure-os a partir de um backup.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+             <div className="p-4 border rounded-md">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="font-semibold">Exportar Banco de Dados</h3>
+                        <p className="text-sm text-muted-foreground">Baixe um arquivo .json com todos os seus dados.</p>
+                    </div>
+                    <Button onClick={handleExportAllData}>
+                        <Download className="mr-2 h-4 w-4"/>
+                        Exportar
+                    </Button>
+                </div>
+            </div>
+             <div className="p-4 border rounded-md space-y-4">
+                <div>
+                    <h3 className="font-semibold">Importar Banco de Dados</h3>
+                    <p className="text-sm text-muted-foreground">Restaure seus dados de um arquivo de backup .json. Isso substituirá TODOS os dados atuais.</p>
+                </div>
+                 <div className="grid w-full max-w-sm items-center gap-1.5">
+                  <Label htmlFor="backup-file-upload">Arquivo de Backup (.json)</Label>
+                  <Input id="backup-file-upload" type="file" accept=".json" onChange={handleBackupFileChange} disabled={isRestoreLoading} />
+              </div>
+                {backupFile && (
+                <div className="text-sm text-muted-foreground">
+                    Arquivo selecionado: <span className="font-medium">{backupFile.name}</span>
+                </div>
+                )}
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-end gap-2 border-t pt-6">
+              <Button onClick={triggerRestore} disabled={!backupFile || isRestoreLoading}>
+              {isRestoreLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                  <UploadCloud className="mr-2 h-4 w-4" />
+              )}
+              Restaurar Backup
+            </Button>
+          </CardFooter>
+        </Card>
+
       </main>
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
@@ -470,7 +630,7 @@ export default function ImportPage() {
             <AlertDialogDescription>
               Esta ação é irreversível. Todos os registros de 
               <span className="font-bold"> {importType === 'vacas' ? 'vacas' : 'nascimentos'} </span>
-              existentes serão <span className="font-bold text-destructive">excluídos permanentemente</span> e substituídos pelos dados do arquivo. Deseja continuar?
+              existentes serão <span className="font-bold text-destructive">excluídos permanentemente</span> e substituídos pelos dados da planilha. Deseja continuar?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -480,6 +640,26 @@ export default function ImportPage() {
               handleImport();
             }}>
               Sim, substituir dados
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isRestoreAlertOpen} onOpenChange={setIsRestoreAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Restauração?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é irreversível. <span className="font-bold text-destructive">Todos os dados atuais serão apagados</span> e substituídos pelos dados do arquivo de backup. Você tem certeza de que deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setIsRestoreAlertOpen(false);
+              handleRestoreData();
+            }}>
+              Sim, Restaurar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
