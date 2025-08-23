@@ -305,16 +305,22 @@ export default function CowsPage() {
 
   const statuses = Array.from(new Set(allCows.map(cow => cow.status))).filter(Boolean) as string[];
 
-  const filteredData = getFilteredAndSortedData(allCows);
-  const paginatedData = rowsPerPage > 0 ? filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : filteredData;
-  const pageCount = rowsPerPage > 0 ? Math.ceil(filteredData.length / rowsPerPage) : 1;
+  const filteredData = React.useMemo(() => getFilteredAndSortedData(allCows), [allCows, getFilteredAndSortedData]);
+  
+  const paginatedData = React.useMemo(() => {
+    return rowsPerPage > 0 ? filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : filteredData;
+  }, [filteredData, currentPage, rowsPerPage]);
+  
+  const pageCount = React.useMemo(() => {
+    return rowsPerPage > 0 ? Math.ceil(filteredData.length / rowsPerPage) : 1;
+  }, [filteredData, rowsPerPage]);
   
   const dataForActiveTab = React.useMemo(() => {
     if (activeTab === 'all') {
-      return getFilteredAndSortedData(allCows);
+      return filteredData;
     }
     return getFilteredAndSortedData(allCows.filter(cow => cow.status === activeTab));
-  }, [activeTab, allCows, getFilteredAndSortedData]);
+  }, [activeTab, allCows, getFilteredAndSortedData, filteredData]);
 
 
   return (
@@ -518,8 +524,7 @@ function CardWithTable({
             Total de registros: {fullDataCount}
         </div>
       </div>
-      <div className="relative w-full overflow-auto">
-        <Table>
+      <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">
@@ -595,11 +600,13 @@ function CardWithTable({
               ))}
             </TableBody>
           </Table>
-        </div>
        <div className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Linhas por página:</span>
-                <Select value={`${rowsPerPage}`} onValueChange={onRowsPerPageChange}>
+                <Select value={`${rowsPerPage}`} onValueChange={(value) => {
+                  setRowsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}>
                     <SelectTrigger className="w-[80px]">
                         <SelectValue placeholder={`${rowsPerPage}`} />
                     </SelectTrigger>
@@ -621,10 +628,3 @@ function CardWithTable({
     </div>
   );
 }
-
-
-    
-
-    
-
-    

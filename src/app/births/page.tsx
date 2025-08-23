@@ -353,16 +353,22 @@ export default function BirthsPage() {
 
   const farms = Array.from(new Set(allBirths.map(b => b.farm).filter(Boolean) as string[]));
 
-  const filteredDataForAll = getFilteredAndSortedData(allBirths);
-  const paginatedDataForAll = rowsPerPage > 0 ? filteredDataForAll.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : filteredDataForAll;
-  const pageCountForAll = rowsPerPage > 0 ? Math.ceil(filteredDataForAll.length / rowsPerPage) : 1;
+  const filteredDataForAll = React.useMemo(() => getFilteredAndSortedData(allBirths), [allBirths, getFilteredAndSortedData]);
+  
+  const paginatedDataForAll = React.useMemo(() => {
+      return rowsPerPage > 0 ? filteredDataForAll.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : filteredDataForAll;
+  }, [filteredDataForAll, currentPage, rowsPerPage]);
+
+  const pageCountForAll = React.useMemo(() => {
+    return rowsPerPage > 0 ? Math.ceil(filteredDataForAll.length / rowsPerPage) : 1;
+  }, [filteredDataForAll, rowsPerPage]);
 
   const dataForActiveTab = React.useMemo(() => {
     if (activeTab === 'all') {
-      return getFilteredAndSortedData(allBirths);
+      return filteredDataForAll;
     }
     return getFilteredAndSortedData(allBirths.filter(b => b.farm === activeTab));
-  }, [activeTab, allBirths, getFilteredAndSortedData]);
+  }, [activeTab, allBirths, getFilteredAndSortedData, filteredDataForAll]);
 
 
   return (
@@ -589,8 +595,7 @@ function CardWithTable({
             Total de registros: {fullDataCount}
         </div>
       </div>
-      <div className="relative w-full overflow-auto">
-        <Table>
+      <Table>
             <TableHeader>
               <TableRow>
                   <TableHead className="w-[50px]">
@@ -677,11 +682,13 @@ function CardWithTable({
               ))}
             </TableBody>
           </Table>
-      </div>
       <div className="flex items-center justify-between p-4 border-t">
           <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Linhas por página:</span>
-              <Select value={`${rowsPerPage}`} onValueChange={onRowsPerPageChange}>
+              <Select value={`${rowsPerPage}`} onValueChange={(value) => {
+                onRowsPerPageChange(value);
+                setCurrentPage(1);
+              }}>
                   <SelectTrigger className="w-[80px]">
                       <SelectValue placeholder={`${rowsPerPage}`} />
                   </SelectTrigger>
@@ -703,9 +710,3 @@ function CardWithTable({
     </div>
   );
 }
-
-    
-
-    
-
-    
