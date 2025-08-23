@@ -41,7 +41,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive, Users, GitCommitVertical, GitBranch } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive, Users, GitCommitVertical, GitBranch, Download } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import { useData } from '@/contexts/data-context';
 import type { Cow } from '@/lib/data-schemas';
@@ -51,6 +51,7 @@ import BulkUpdateLotDialog from '@/components/bulk-update-lot-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import * as xlsx from 'xlsx';
 
 
 type ColumnKey = keyof Cow;
@@ -75,6 +76,7 @@ export default function CowsPage() {
   const [selectedCows, setSelectedCows] = React.useState<string[]>([]);
   const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [cowToDelete, setCowToDelete] = React.useState<Cow | null>(null);
+  const [activeTab, setActiveTab] = React.useState('all');
   
   const [currentPage, setCurrentPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -165,7 +167,7 @@ export default function CowsPage() {
     setSearchTerms(prev => ({ ...prev, [column]: term }));
   };
 
-  const getFilteredAndSortedData = (dataSet: Cow[]) => {
+  const getFilteredAndSortedData = React.useCallback((dataSet: Cow[]) => {
     let filteredData = dataSet.filter(item => {
         return Object.entries(filters).every(([key, values]) => {
             if (values.length === 0) return true;
@@ -188,7 +190,7 @@ export default function CowsPage() {
     }
 
     return filteredData;
-  };
+  }, [filters, sort]);
   
   const getUniqueValues = (dataSet: Cow[], column: ColumnKey) => {
     const searchTerm = searchTerms[column].toLowerCase();
@@ -209,6 +211,27 @@ export default function CowsPage() {
     // @ts-ignore
     setFilters(prev => ({ ...prev, [column]: allValues.filter(Boolean).map(v => String(v)) }));
   }
+
+  const handleExport = (dataToExport: Cow[]) => {
+    if (dataToExport.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Nenhum dado para exportar",
+        description: "A tabela atual está vazia ou os filtros não retornaram resultados.",
+      });
+      return;
+    }
+    
+    const worksheet = xlsx.utils.json_to_sheet(dataToExport);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Vacas");
+    xlsx.writeFile(workbook, "vacas.xlsx");
+
+    toast({
+        title: "Exportação Concluída!",
+        description: `${dataToExport.length} registros foram exportados para vacas.xlsx`,
+    });
+  };
 
   const renderFilterableHeader = (column: ColumnKey, label: string) => {
     const uniqueValues = getUniqueValues(allCows, column);
@@ -285,6 +308,13 @@ export default function CowsPage() {
   const filteredData = getFilteredAndSortedData(allCows);
   const paginatedData = rowsPerPage > 0 ? filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : filteredData;
   const pageCount = rowsPerPage > 0 ? Math.ceil(filteredData.length / rowsPerPage) : 1;
+  
+  const dataForActiveTab = React.useMemo(() => {
+    if (activeTab === 'all') {
+      return getFilteredAndSortedData(allCows);
+    }
+    return getFilteredAndSortedData(allCows.filter(cow => cow.status === activeTab));
+  }, [activeTab, allCows, getFilteredAndSortedData]);
 
 
   return (
@@ -294,9 +324,13 @@ export default function CowsPage() {
             Gerenciar Vacas
         </h1>
         <div className="flex items-center gap-2">
+            <Button onClick={() => handleExport(dataForActiveTab)}>
+                <Download />
+                <span>Exportar</span>
+            </Button>
             <Button onClick={() => setIsBulkUpdateDialogOpen(true)} disabled={selectedCows.length === 0}>
                 <PencilRuler />
-                <span>Alterar Lote em Massa ({selectedCows.length})</span>
+                <span>Alterar Lote ({selectedCows.length})</span>
             </Button>
             <Button asChild>
                 <Link href="/cows/new">
@@ -342,11 +376,11 @@ export default function CowsPage() {
             </Card>
           </div>
          
-          <Tabs defaultValue="all" onValueChange={() => setCurrentPage(1)}>
+          <Tabs defaultValue="all" onValueChange={(value) => {setCurrentPage(1); setActiveTab(value)}}>
             <TabsList>
               <TabsTrigger value="all">Todas</TabsTrigger>
               {statuses.map(status => (
-                <TabsTrigger key={status} value={status.toLowerCase().replace(' ', '-')}>{status}</TabsTrigger>
+                <TabsTrigger key={status} value={status}>{status}</TabsTrigger>
 
               ))}
             </TabsList>
@@ -379,7 +413,7 @@ export default function CowsPage() {
                 const statusPageCount = rowsPerPage > 0 ? Math.ceil(statusFilteredData.length / rowsPerPage) : 1;
 
                 return (
-                    <TabsContent key={status} value={status.toLowerCase().replace(' ', '-')}>
+                    <TabsContent key={status} value={status}>
                         <CardWithTable
                             title={`Vacas ${status}`}
                             data={statusPaginatedData}
@@ -484,82 +518,84 @@ function CardWithTable({
             Total de registros: {fullDataCount}
         </div>
       </div>
-      <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]">
-                  <Checkbox
-                      checked={data.length > 0 && selectedCows.length === data.length}
-                      onCheckedChange={onSelectAllCows}
-                      aria-label="Selecionar todas as linhas"
-                  />
-              </TableHead>
-              {renderFilterableHeader('id', 'Brinco Nº')}
-              {renderFilterableHeader('animal', 'Animal')}
-              {renderFilterableHeader('origem', 'Origem')}
-              {renderFilterableHeader('lot', 'Lote')}
-              {renderFilterableHeader('obs1', 'Obs: 1')}
-              {renderFilterableHeader('farm', 'Fazenda')}
-              {renderFilterableHeader('location', 'Localização')}
-              {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
-              {renderFilterableHeader('mes', 'Mês')}
-              {renderFilterableHeader('ano', 'Ano')}
-              {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((cow, index) => (
-              <TableRow key={`${cow.id}-${index}`} data-state={selectedCows.includes(cow.id) ? "selected" : ""}>
-                <TableCell>
+      <div className="relative w-full overflow-auto">
+        <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]">
                     <Checkbox
-                        checked={selectedCows.includes(cow.id)}
-                        onCheckedChange={() => onSelectCow(cow.id)}
-                        aria-label={`Selecionar linha ${index + 1}`}
+                        checked={data.length > 0 && selectedCows.length === data.length}
+                        onCheckedChange={onSelectAllCows}
+                        aria-label="Selecionar todas as linhas"
                     />
-                </TableCell>
-                <TableCell className="font-medium">{cow.id}</TableCell>
-                <TableCell>{cow.animal}</TableCell>
-                <TableCell>{cow.origem}</TableCell>
-                <TableCell>{cow.lot}</TableCell>
-                <TableCell>{cow.obs1 || '-'}</TableCell>
-                <TableCell>{cow.farm}</TableCell>
-                <TableCell>{cow.location}</TableCell>
-                <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
-                <TableCell>{cow.mes || '-'}</TableCell>
-                <TableCell>{cow.ano || '-'}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      cow.registrationStatus === 'Ativo'
-                        ? 'default'
-                        : 'destructive'
-                    }
-                    className={cow.registrationStatus === 'Ativo' ? 'bg-green-600' : ''}
-                  >
-                    {cow.registrationStatus}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end">
-                    <Button variant="ghost" size="icon" onClick={() => onEditClick(cow)}>
-                        <PencilRuler className="h-4 w-4" />
-                        <span className="sr-only">Editar</span>
-                    </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onDiscardClick(cow)} disabled={cow.registrationStatus === 'Inativo'}>
-                        <Archive className="h-4 w-4" />
-                        <span className="sr-only">Descartar</span>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                        <span className="sr-only">Excluir</span>
-                    </Button>
-                  </div>
-                </TableCell>
+                </TableHead>
+                {renderFilterableHeader('id', 'Brinco Nº')}
+                {renderFilterableHeader('animal', 'Animal')}
+                {renderFilterableHeader('origem', 'Origem')}
+                {renderFilterableHeader('lot', 'Lote')}
+                {renderFilterableHeader('obs1', 'Obs: 1')}
+                {renderFilterableHeader('farm', 'Fazenda')}
+                {renderFilterableHeader('location', 'Localização')}
+                {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
+                {renderFilterableHeader('mes', 'Mês')}
+                {renderFilterableHeader('ano', 'Ano')}
+                {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {data.map((cow, index) => (
+                <TableRow key={`${cow.id}-${index}`} data-state={selectedCows.includes(cow.id) ? "selected" : ""}>
+                  <TableCell>
+                      <Checkbox
+                          checked={selectedCows.includes(cow.id)}
+                          onCheckedChange={() => onSelectCow(cow.id)}
+                          aria-label={`Selecionar linha ${index + 1}`}
+                      />
+                  </TableCell>
+                  <TableCell className="font-medium">{cow.id}</TableCell>
+                  <TableCell>{cow.animal}</TableCell>
+                  <TableCell>{cow.origem}</TableCell>
+                  <TableCell>{cow.lot}</TableCell>
+                  <TableCell>{cow.obs1 || '-'}</TableCell>
+                  <TableCell>{cow.farm}</TableCell>
+                  <TableCell>{cow.location}</TableCell>
+                  <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
+                  <TableCell>{cow.mes || '-'}</TableCell>
+                  <TableCell>{cow.ano || '-'}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        cow.registrationStatus === 'Ativo'
+                          ? 'default'
+                          : 'destructive'
+                      }
+                      className={cow.registrationStatus === 'Ativo' ? 'bg-green-600' : ''}
+                    >
+                      {cow.registrationStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end">
+                      <Button variant="ghost" size="icon" onClick={() => onEditClick(cow)}>
+                          <PencilRuler className="h-4 w-4" />
+                          <span className="sr-only">Editar</span>
+                      </Button>
+                        <Button variant="ghost" size="icon" onClick={() => onDiscardClick(cow)} disabled={cow.registrationStatus === 'Inativo'}>
+                          <Archive className="h-4 w-4" />
+                          <span className="sr-only">Descartar</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Excluir</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
        <div className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Linhas por página:</span>
@@ -586,6 +622,8 @@ function CardWithTable({
   );
 }
 
+
+    
 
     
 

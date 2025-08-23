@@ -32,13 +32,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2 } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2, Download } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import type { IATF } from '@/lib/data-schemas';
 import { useData } from '@/contexts/data-context';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import EditIATFDialog from '@/components/edit-iatf-dialog';
+import { format } from 'date-fns';
+import * as xlsx from 'xlsx';
 
 
 type ColumnKey = keyof IATF | 'id';
@@ -114,7 +116,7 @@ export default function IATFsPage() {
             if (!values || values.length === 0) return true;
             const itemValue = item[key as keyof IATF];
             if (key.endsWith('Date')) {
-                 return values.includes(itemValue ? new Date(itemValue).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada');
+                 return values.includes(itemValue ? format(new Date(itemValue), 'dd/MM/yyyy') : 'Data não informada');
             }
             return values.includes(String(itemValue));
         });
@@ -143,7 +145,7 @@ export default function IATFsPage() {
     if (column.endsWith('Date')) {
        uniqueValues = Array.from(new Set(dataSet.map(item => {
         const dateValue = item[column as keyof IATF];
-        return dateValue ? new Date(dateValue).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada';
+        return dateValue ? format(new Date(dateValue), 'dd/MM/yyyy') : 'Data não informada';
        }))).sort((a, b) => {
         if (a === 'Data não informada') return 1;
         if (b === 'Data não informada') return -1;
@@ -167,6 +169,36 @@ export default function IATFsPage() {
     setFilters(prev => ({ ...prev, [column]: allValues.filter((v): v is string => v !== undefined && v !== null) }));
   }
 
+  const handleExport = (dataToExport: IATF[]) => {
+    if (dataToExport.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Nenhum dado para exportar",
+        description: "A tabela atual está vazia ou os filtros não retornaram resultados.",
+      });
+      return;
+    }
+
+    const formattedData = dataToExport.map(iatf => ({
+      "Brinco Nº (Vaca)": iatf.cowId,
+      "Data Inseminação": iatf.inseminationDate ? format(iatf.inseminationDate, 'dd/MM/yyyy') : '',
+      "Touro": iatf.bull,
+      "Protocolo": iatf.protocol,
+      "Data Diagnóstico": iatf.diagnosisDate ? format(iatf.diagnosisDate, 'dd/MM/yyyy') : '',
+      "Resultado": iatf.result,
+    }));
+
+    const worksheet = xlsx.utils.json_to_sheet(formattedData);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "IATF");
+    xlsx.writeFile(workbook, "iatf.xlsx");
+
+    toast({
+        title: "Exportação Concluída!",
+        description: `${dataToExport.length} registros foram exportados para iatf.xlsx`,
+    });
+  };
+
   const renderFilterableHeader = (column: ColumnKey, label: string, dataSet: IATF[]) => {
     const uniqueValues = getUniqueValues(dataSet, column);
     let allUniqueValuesForSelectAll;
@@ -174,7 +206,7 @@ export default function IATFsPage() {
      if (column.endsWith('Date')) {
         allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => {
             const dateValue = item[column as keyof IATF];
-            return dateValue ? new Date(dateValue).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'
+            return dateValue ? format(new Date(dateValue), 'dd/MM/yyyy') : 'Data não informada'
         }))).filter(Boolean).sort();
     } else {
        allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => String(item[column as keyof IATF])))).filter(Boolean).sort();
@@ -254,6 +286,10 @@ export default function IATFsPage() {
           Controle de IATF
         </h1>
         <div className="flex items-center gap-2">
+             <Button onClick={() => handleExport(filteredData)}>
+              <Download />
+              <span>Exportar</span>
+            </Button>
             <Button asChild>
                 <Link href="/iaths/new">
                 <PlusCircle /> 
@@ -268,8 +304,7 @@ export default function IATFsPage() {
             <div className="p-6">
                 <h3 className="text-xl font-semibold tracking-tight">Todos os Registros</h3>
             </div>
-            <div className="p-0">
-                <div className="overflow-x-auto">
+            <div className="relative w-full overflow-auto">
                 <Table>
                     <TableHeader>
                     <TableRow>
@@ -286,10 +321,10 @@ export default function IATFsPage() {
                     {filteredData.map((iatf) => (
                         <TableRow key={iatf.id}>
                         <TableCell className="font-medium">{iatf.cowId}</TableCell>
-                        <TableCell>{iatf.inseminationDate ? new Date(iatf.inseminationDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-'}</TableCell>
+                        <TableCell>{iatf.inseminationDate ? format(new Date(iatf.inseminationDate), 'dd/MM/yyyy') : '-'}</TableCell>
                         <TableCell>{iatf.bull || '-'}</TableCell>
                         <TableCell>{iatf.protocol || '-'}</TableCell>
-                        <TableCell>{iatf.diagnosisDate ? new Date(iatf.diagnosisDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-'}</TableCell>
+                        <TableCell>{iatf.diagnosisDate ? format(new Date(iatf.diagnosisDate), 'dd/MM/yyyy') : '-'}</TableCell>
                         <TableCell>
                             {iatf.result ? (
                             <Badge
@@ -324,9 +359,8 @@ export default function IATFsPage() {
                     ))}
                     </TableBody>
                 </Table>
-                </div>
             </div>
-            <div className="p-6">
+            <div className="p-6 border-t">
                 <PaginationComponent pageCount={5} />
             </div>
         </div>
@@ -354,3 +388,5 @@ export default function IATFsPage() {
     </main>
   );
 }
+
+    

@@ -39,7 +39,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2, Send, GitCommitVertical, GitBranch, XCircle, HelpCircle } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, Search, PlusCircle, PencilRuler, Trash2, Send, GitCommitVertical, GitBranch, XCircle, HelpCircle, Download } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import type { Birth } from '@/lib/data-schemas';
 import { useData } from '@/contexts/data-context';
@@ -50,6 +50,8 @@ import EditBirthDialog from '@/components/edit-birth-dialog';
 import BulkUpdateBirthDialog from '@/components/bulk-update-birth-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import * as xlsx from 'xlsx';
 
 type ColumnKey = keyof Birth | 'id';
 type SortDirection = 'asc' | 'desc' | null;
@@ -77,6 +79,7 @@ export default function BirthsPage() {
 
   const [currentPage, setCurrentPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [activeTab, setActiveTab] = React.useState('all');
 
   const sexCounts = React.useMemo(() => {
     return allBirths.reduce((acc, birth) => {
@@ -174,15 +177,14 @@ export default function BirthsPage() {
     setSearchTerms(prev => ({ ...prev, [column]: term }));
   };
 
-  const getFilteredAndSortedData = (dataSet: Birth[]) => {
+  const getFilteredAndSortedData = React.useCallback((dataSet: Birth[]) => {
     let filteredData = dataSet.filter(item => {
         return Object.entries(filters).every(([key, values]) => {
             if (values.length === 0) return true;
             const itemValue = item[key as keyof Birth];
-            // @ts-ignore
             if (key === 'date') {
                  // @ts-ignore
-                 return values.includes(item.date ? new Date(item.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada');
+                 return values.includes(item.date ? format(item.date, 'dd/MM/yyyy') : 'Data não informada');
             }
             return values.includes(String(itemValue));
         });
@@ -201,14 +203,14 @@ export default function BirthsPage() {
     }
 
     return filteredData;
-  };
+  }, [filters, sort]);
   
   const getUniqueValues = (dataSet: Birth[], column: ColumnKey) => {
     const searchTerm = searchTerms[column].toLowerCase();
     
     let uniqueValues;
     if (column === 'date') {
-       uniqueValues = Array.from(new Set(dataSet.map(item => item.date ? new Date(item.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'))).sort((a, b) => {
+       uniqueValues = Array.from(new Set(dataSet.map(item => item.date ? format(item.date, 'dd/MM/yyyy') : 'Data não informada'))).sort((a, b) => {
         if (a === 'Data não informada') return 1;
         if (b === 'Data não informada') return -1;
         // @ts-ignore
@@ -234,12 +236,48 @@ export default function BirthsPage() {
     setFilters(prev => ({ ...prev, [column]: allValues }));
   }
 
+  const handleExport = (dataToExport: Birth[]) => {
+    if (dataToExport.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Nenhum dado para exportar",
+            description: "A tabela atual está vazia ou os filtros não retornaram resultados.",
+        });
+        return;
+    }
+    
+    const formattedData = dataToExport.map(birth => ({
+        "Brinco Nº (Mãe)": birth.cowId,
+        "Sexo do Bezerro": birth.sex,
+        "Raça do Bezerro": birth.breed,
+        "Nome do Pai": birth.sire,
+        "Data Nascimento": birth.date ? format(birth.date, 'dd/MM/yyyy') : 'Data não informada',
+        "Lote": birth.lot,
+        "Obs: 1": birth.obs1,
+        "JV - Vo": birth.jvvo,
+        "Fazenda": birth.farm,
+        "Localização": birth.location,
+        "Animal": birth.animal,
+        "Observações": birth.observations,
+    }));
+
+    const worksheet = xlsx.utils.json_to_sheet(formattedData);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Nascimentos");
+    xlsx.writeFile(workbook, "nascimentos.xlsx");
+
+    toast({
+        title: "Exportação Concluída!",
+        description: `${dataToExport.length} registros foram exportados para nascimentos.xlsx`,
+    });
+  };
+
   const renderFilterableHeader = (column: ColumnKey, label: string, dataSet: Birth[]) => {
     const uniqueValues = getUniqueValues(dataSet, column);
     let allUniqueValuesForSelectAll;
 
      if (column === 'date') {
-        allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => item.date ? new Date(item.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'))).filter(Boolean).sort();
+        allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => item.date ? format(item.date, 'dd/MM/yyyy') : 'Data não informada'))).filter(Boolean).sort();
     } else {
        // @ts-ignore
        allUniqueValuesForSelectAll = Array.from(new Set(dataSet.map(item => String(item[column as keyof Birth])))).filter(Boolean).sort();
@@ -319,6 +357,14 @@ export default function BirthsPage() {
   const paginatedDataForAll = rowsPerPage > 0 ? filteredDataForAll.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : filteredDataForAll;
   const pageCountForAll = rowsPerPage > 0 ? Math.ceil(filteredDataForAll.length / rowsPerPage) : 1;
 
+  const dataForActiveTab = React.useMemo(() => {
+    if (activeTab === 'all') {
+      return getFilteredAndSortedData(allBirths);
+    }
+    return getFilteredAndSortedData(allBirths.filter(b => b.farm === activeTab));
+  }, [activeTab, allBirths, getFilteredAndSortedData]);
+
+
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
@@ -326,6 +372,10 @@ export default function BirthsPage() {
           Registro de Nascimentos
         </h1>
         <div className="flex items-center gap-2">
+            <Button onClick={() => handleExport(dataForActiveTab)}>
+              <Download />
+              <span>Exportar</span>
+            </Button>
             <Button onClick={() => setIsBulkUpdateDialogOpen(true)} disabled={selectedBirths.length === 0}>
                 <PencilRuler />
                 <span>Alterar em Massa ({selectedBirths.length})</span>
@@ -384,7 +434,7 @@ export default function BirthsPage() {
             </Card>
           </div>
 
-          <Tabs defaultValue="all" onValueChange={() => setCurrentPage(1)}>
+          <Tabs defaultValue="all" onValueChange={(value) => { setCurrentPage(1); setActiveTab(value); }}>
             <TabsList>
               <TabsTrigger value="all">Todos</TabsTrigger>
               {farms.map(farm => (
@@ -465,7 +515,7 @@ export default function BirthsPage() {
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta ação não pode ser desfeita. Isso excluirá permanentemente o registro de nascimento da vaca
-              <span className="font-bold"> Nº {birthToDelete?.cowId}</span> do dia {birthToDelete?.date ? new Date(birthToDelete.date).toLocaleDateString('pt-BR') : ''}.
+              <span className="font-bold"> Nº {birthToDelete?.cowId}</span> do dia {birthToDelete?.date ? format(birthToDelete.date, 'dd/MM/yyyy') : ''}.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -539,93 +589,95 @@ function CardWithTable({
             Total de registros: {fullDataCount}
         </div>
       </div>
-      <Table>
-          <TableHeader>
-            <TableRow>
-                <TableHead className="w-[50px]">
-                  <Checkbox
-                      checked={data.length > 0 && selectedBirths.length === data.length}
-                      onCheckedChange={onSelectAllBirths}
-                      aria-label="Selecionar todas as linhas"
-                  />
-              </TableHead>
-              {renderFilterableHeader('cowId', 'Brinco Nº', allData)}
-              {renderFilterableHeader('sex', 'Sexo do Bezerro', allData)}
-              {renderFilterableHeader('breed', 'Raça do Bezerro', allData)}
-              {renderFilterableHeader('sire', 'Nome do Pai', allData)}
-              {renderFilterableHeader('date', 'Data Nascimento', allData)}
-              {renderFilterableHeader('lot', 'Lote', allData)}
-              {renderFilterableHeader('obs1', 'Obs: 1', allData)}
-              {renderFilterableHeader('jvvo', 'JV - Vo', allData)}
-              {renderFilterableHeader('farm', 'Fazenda', allData)}
-              {renderFilterableHeader('location', 'Localização', allData)}
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((birth, index) => (
-              <TableRow 
-                key={`${birth.id}-${birth.cowId}-${index}`}
-                data-state={birth.id && selectedBirths.includes(birth.id) ? "selected" : ""}
-              >
-                  <TableCell>
+      <div className="relative w-full overflow-auto">
+        <Table>
+            <TableHeader>
+              <TableRow>
+                  <TableHead className="w-[50px]">
                     <Checkbox
-                        checked={birth.id ? selectedBirths.includes(birth.id) : false}
-                        onCheckedChange={() => onSelectBirth(birth.id)}
-                        aria-label={`Selecionar linha ${index + 1}`}
-                        disabled={!birth.id}
+                        checked={data.length > 0 && selectedBirths.length === data.length}
+                        onCheckedChange={onSelectAllBirths}
+                        aria-label="Selecionar todas as linhas"
                     />
-                </TableCell>
-                <TableCell className="font-medium">{birth.cowId}</TableCell>
-                <TableCell>
-                  {birth.sex ? (
-                    <Badge
-                      variant={
-                          birth.sex === 'Aborto'
-                          ? 'destructive'
-                          : birth.sex === 'Macho'
-                          ? 'secondary'
-                          : birth.sex === 'Fêmea'
-                          ? 'default'
-                          : 'outline'
-                      }
-                    >
-                      {birth.sex}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">Não Definido</Badge>
-                  )}
-                </TableCell>
-                <TableCell>{birth.breed || '-'}</TableCell>
-                <TableCell>{birth.sire || '-'}</TableCell>
-                <TableCell>{birth.date ? new Date(birth.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'}</TableCell>
-                <TableCell>{birth.lot || '-'}</TableCell>
-                <TableCell>{birth.obs1 || '-'}</TableCell>
-                <TableCell>{birth.jvvo || '-'}</TableCell>
-                <TableCell>{birth.farm || '-'}</TableCell>
-                <TableCell>{birth.location || '-'}</TableCell>
-                  <TableCell className="text-right">
-                  <div className="flex items-center justify-end">
-                    {(birth.sex === 'Fêmea' || birth.sex === 'Macho') && (
-                      <Button variant="ghost" size="icon" title="Transferir para Rebanho" onClick={() => onTransferClick(birth)}>
-                          <Send className="h-4 w-4" />
-                          <span className="sr-only">Transferir</span>
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" onClick={() => onEditClick(birth)}>
-                        <PencilRuler className="h-4 w-4" />
-                        <span className="sr-only">Editar</span>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDeleteClick(birth)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                        <span className="sr-only">Excluir</span>
-                    </Button>
-                  </div>
-                </TableCell>
+                </TableHead>
+                {renderFilterableHeader('cowId', 'Brinco Nº', allData)}
+                {renderFilterableHeader('sex', 'Sexo do Bezerro', allData)}
+                {renderFilterableHeader('breed', 'Raça do Bezerro', allData)}
+                {renderFilterableHeader('sire', 'Nome do Pai', allData)}
+                {renderFilterableHeader('date', 'Data Nascimento', allData)}
+                {renderFilterableHeader('lot', 'Lote', allData)}
+                {renderFilterableHeader('obs1', 'Obs: 1', allData)}
+                {renderFilterableHeader('jvvo', 'JV - Vo', allData)}
+                {renderFilterableHeader('farm', 'Fazenda', allData)}
+                {renderFilterableHeader('location', 'Localização', allData)}
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {data.map((birth, index) => (
+                <TableRow 
+                  key={`${birth.id}-${birth.cowId}-${index}`}
+                  data-state={birth.id && selectedBirths.includes(birth.id) ? "selected" : ""}
+                >
+                    <TableCell>
+                      <Checkbox
+                          checked={birth.id ? selectedBirths.includes(birth.id) : false}
+                          onCheckedChange={() => onSelectBirth(birth.id)}
+                          aria-label={`Selecionar linha ${index + 1}`}
+                          disabled={!birth.id}
+                      />
+                  </TableCell>
+                  <TableCell className="font-medium">{birth.cowId}</TableCell>
+                  <TableCell>
+                    {birth.sex ? (
+                      <Badge
+                        variant={
+                            birth.sex === 'Aborto'
+                            ? 'destructive'
+                            : birth.sex === 'Macho'
+                            ? 'secondary'
+                            : birth.sex === 'Fêmea'
+                            ? 'default'
+                            : 'outline'
+                        }
+                      >
+                        {birth.sex}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">Não Definido</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>{birth.breed || '-'}</TableCell>
+                  <TableCell>{birth.sire || '-'}</TableCell>
+                  <TableCell>{birth.date ? format(birth.date, 'dd/MM/yyyy') : 'Data não informada'}</TableCell>
+                  <TableCell>{birth.lot || '-'}</TableCell>
+                  <TableCell>{birth.obs1 || '-'}</TableCell>
+                  <TableCell>{birth.jvvo || '-'}</TableCell>
+                  <TableCell>{birth.farm || '-'}</TableCell>
+                  <TableCell>{birth.location || '-'}</TableCell>
+                    <TableCell className="text-right">
+                    <div className="flex items-center justify-end">
+                      {(birth.sex === 'Fêmea' || birth.sex === 'Macho') && (
+                        <Button variant="ghost" size="icon" title="Transferir para Rebanho" onClick={() => onTransferClick(birth)}>
+                            <Send className="h-4 w-4" />
+                            <span className="sr-only">Transferir</span>
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" onClick={() => onEditClick(birth)}>
+                          <PencilRuler className="h-4 w-4" />
+                          <span className="sr-only">Editar</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => onDeleteClick(birth)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Excluir</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+      </div>
       <div className="flex items-center justify-between p-4 border-t">
           <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Linhas por página:</span>
@@ -651,6 +703,8 @@ function CardWithTable({
     </div>
   );
 }
+
+    
 
     
 
