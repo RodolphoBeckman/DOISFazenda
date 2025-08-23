@@ -50,6 +50,7 @@ import DiscardCowDialog from '@/components/discard-cow-dialog';
 import BulkUpdateLotDialog from '@/components/bulk-update-lot-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 type ColumnKey = keyof Cow;
@@ -74,6 +75,9 @@ export default function CowsPage() {
   const [selectedCows, setSelectedCows] = React.useState<string[]>([]);
   const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [cowToDelete, setCowToDelete] = React.useState<Cow | null>(null);
+  
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const animalCounts = React.useMemo(() => {
     return allCows.reduce((acc, cow) => {
@@ -139,6 +143,7 @@ export default function CowsPage() {
 
 
   const handleFilterChange = (column: ColumnKey, value: string) => {
+    setCurrentPage(1);
     setFilters(prev => {
       const newColumnFilters = prev[column].includes(value)
         ? prev[column].filter(v => v !== value)
@@ -148,6 +153,7 @@ export default function CowsPage() {
   };
 
   const handleSort = (column: ColumnKey) => {
+    setCurrentPage(1);
     setSort(prev => ({
       column,
       direction: prev.column === column && prev.direction === 'asc' ? 'desc' : 'asc'
@@ -155,6 +161,7 @@ export default function CowsPage() {
   };
   
   const handleSearchChange = (column: ColumnKey, term: string) => {
+    setCurrentPage(1);
     setSearchTerms(prev => ({ ...prev, [column]: term }));
   };
 
@@ -193,10 +200,12 @@ export default function CowsPage() {
   };
   
   const clearFilter = (column: ColumnKey) => {
+    setCurrentPage(1);
     setFilters(prev => ({ ...prev, [column]: [] }));
   };
 
   const selectAll = (column: ColumnKey, allValues: (string | undefined)[]) => {
+    setCurrentPage(1);
     // @ts-ignore
     setFilters(prev => ({ ...prev, [column]: allValues.filter(Boolean).map(v => String(v)) }));
   }
@@ -274,6 +283,8 @@ export default function CowsPage() {
   const statuses = Array.from(new Set(allCows.map(cow => cow.status))).filter(Boolean) as string[];
 
   const filteredData = getFilteredAndSortedData(allCows);
+  const paginatedData = rowsPerPage > 0 ? filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : filteredData;
+  const pageCount = rowsPerPage > 0 ? Math.ceil(filteredData.length / rowsPerPage) : 1;
 
 
   return (
@@ -331,7 +342,7 @@ export default function CowsPage() {
             </Card>
           </div>
          
-          <Tabs defaultValue="all">
+          <Tabs defaultValue="all" onValueChange={() => setCurrentPage(1)}>
             <TabsList>
               <TabsTrigger value="all">Todas</TabsTrigger>
               {statuses.map(status => (
@@ -343,7 +354,8 @@ export default function CowsPage() {
             <TabsContent value="all">
               <CardWithTable 
                 title="Todas as Vacas" 
-                data={filteredData} 
+                data={paginatedData}
+                fullDataCount={filteredData.length}
                 renderFilterableHeader={renderFilterableHeader} 
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteClick}
@@ -351,15 +363,27 @@ export default function CowsPage() {
                 selectedCows={selectedCows}
                 onSelectCow={handleSelectCow}
                 onSelectAllCows={() => handleSelectAllCows(filteredData)}
+                currentPage={currentPage}
+                pageCount={pageCount}
+                onPageChange={setCurrentPage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={(value) => {
+                  setRowsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}
               />
             </TabsContent>
             {statuses.map(status => {
                 const statusFilteredData = getFilteredAndSortedData(allCows.filter((c) => c.status === status));
+                const statusPaginatedData = rowsPerPage > 0 ? statusFilteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : statusFilteredData;
+                const statusPageCount = rowsPerPage > 0 ? Math.ceil(statusFilteredData.length / rowsPerPage) : 1;
+
                 return (
                     <TabsContent key={status} value={status.toLowerCase().replace(' ', '-')}>
                         <CardWithTable
                             title={`Vacas ${status}`}
-                            data={statusFilteredData}
+                            data={statusPaginatedData}
+                            fullDataCount={statusFilteredData.length}
                             renderFilterableHeader={renderFilterableHeader}
                             onEditClick={handleEditClick}
                             onDeleteClick={handleDeleteClick}
@@ -367,6 +391,14 @@ export default function CowsPage() {
                             selectedCows={selectedCows}
                             onSelectCow={handleSelectCow}
                             onSelectAllCows={() => handleSelectAllCows(statusFilteredData)}
+                            currentPage={currentPage}
+                            pageCount={statusPageCount}
+                            onPageChange={setCurrentPage}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={(value) => {
+                                setRowsPerPage(Number(value));
+                                setCurrentPage(1);
+                            }}
                         />
                     </TabsContent>
                 )
@@ -412,6 +444,7 @@ export default function CowsPage() {
 interface CardWithTableProps {
     title: string;
     data: Cow[];
+    fullDataCount: number;
     renderFilterableHeader: (column: ColumnKey, label: string) => React.ReactNode;
     onEditClick: (cow: Cow) => void;
     onDeleteClick: (cow: Cow) => void;
@@ -419,13 +452,37 @@ interface CardWithTableProps {
     selectedCows: string[];
     onSelectCow: (cowId: string) => void;
     onSelectAllCows: () => void;
+    currentPage: number;
+    pageCount: number;
+    onPageChange: (page: number) => void;
+    rowsPerPage: number;
+    onRowsPerPageChange: (value: string) => void;
 }
 
-function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDeleteClick, onDiscardClick, selectedCows, onSelectCow, onSelectAllCows }: CardWithTableProps) {
+function CardWithTable({ 
+    title, 
+    data, 
+    fullDataCount,
+    renderFilterableHeader, 
+    onEditClick, 
+    onDeleteClick, 
+    onDiscardClick, 
+    selectedCows, 
+    onSelectCow, 
+    onSelectAllCows,
+    currentPage,
+    pageCount,
+    onPageChange,
+    rowsPerPage,
+    onRowsPerPageChange
+}: CardWithTableProps) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
-      <div className="p-6">
+      <div className="p-6 flex justify-between items-center">
         <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
+         <div className="text-sm text-muted-foreground">
+            Total de registros: {fullDataCount}
+        </div>
       </div>
       <div className="p-0">
         <div className="overflow-x-auto">
@@ -507,9 +564,31 @@ function CardWithTable({ title, data, renderFilterableHeader, onEditClick, onDel
           </Table>
         </div>
       </div>
-      <div className="p-6">
-        <PaginationComponent pageCount={10} />
-      </div>
+       <div className="flex items-center justify-between p-4 border-t">
+            <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Linhas por página:</span>
+                <Select value={`${rowsPerPage}`} onValueChange={onRowsPerPageChange}>
+                    <SelectTrigger className="w-[80px]">
+                        <SelectValue placeholder={`${rowsPerPage}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                        <SelectItem value="-1">Todas</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <PaginationComponent 
+                currentPage={currentPage}
+                pageCount={pageCount}
+                onPageChange={onPageChange}
+            />
+        </div>
     </div>
   );
 }
+
+
+    

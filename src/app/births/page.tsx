@@ -49,6 +49,7 @@ import { useToast } from '@/hooks/use-toast';
 import EditBirthDialog from '@/components/edit-birth-dialog';
 import BulkUpdateBirthDialog from '@/components/bulk-update-birth-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type ColumnKey = keyof Birth | 'id';
 type SortDirection = 'asc' | 'desc' | null;
@@ -73,6 +74,9 @@ export default function BirthsPage() {
   const [birthToTransfer, setBirthToTransfer] = React.useState<Birth | null>(null);
   const [isTransferAlertOpen, setIsTransferAlertOpen] = React.useState(false);
   const [selectedBirth, setSelectedBirth] = React.useState<Birth | null>(null);
+
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const sexCounts = React.useMemo(() => {
     return allBirths.reduce((acc, birth) => {
@@ -148,6 +152,7 @@ export default function BirthsPage() {
 
 
   const handleFilterChange = (column: ColumnKey, value: string) => {
+    setCurrentPage(1);
     setFilters(prev => {
       const newColumnFilters = prev[column].includes(value)
         ? prev[column].filter(v => v !== value)
@@ -157,6 +162,7 @@ export default function BirthsPage() {
   };
 
   const handleSort = (column: ColumnKey) => {
+    setCurrentPage(1);
     setSort(prev => ({
       column,
       direction: prev.column === column && prev.direction === 'asc' ? 'desc' : 'asc'
@@ -164,6 +170,7 @@ export default function BirthsPage() {
   };
 
   const handleSearchChange = (column: ColumnKey, term: string) => {
+    setCurrentPage(1);
     setSearchTerms(prev => ({ ...prev, [column]: term }));
   };
 
@@ -218,10 +225,12 @@ export default function BirthsPage() {
   };
   
   const clearFilter = (column: ColumnKey) => {
+    setCurrentPage(1);
     setFilters(prev => ({ ...prev, [column]: [] }));
   };
 
   const selectAll = (column: ColumnKey, allValues: string[]) => {
+    setCurrentPage(1);
     setFilters(prev => ({ ...prev, [column]: allValues }));
   }
 
@@ -307,6 +316,8 @@ export default function BirthsPage() {
   const farms = Array.from(new Set(allBirths.map(b => b.farm).filter(Boolean) as string[]));
 
   const filteredDataForAll = getFilteredAndSortedData(allBirths);
+  const paginatedDataForAll = rowsPerPage > 0 ? filteredDataForAll.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : filteredDataForAll;
+  const pageCountForAll = rowsPerPage > 0 ? Math.ceil(filteredDataForAll.length / rowsPerPage) : 1;
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -373,7 +384,7 @@ export default function BirthsPage() {
             </Card>
           </div>
 
-          <Tabs defaultValue="all">
+          <Tabs defaultValue="all" onValueChange={() => setCurrentPage(1)}>
             <TabsList>
               <TabsTrigger value="all">Todos</TabsTrigger>
               {farms.map(farm => (
@@ -383,7 +394,8 @@ export default function BirthsPage() {
             <TabsContent value="all">
                 <CardWithTable 
                   title="Todos os Nascimentos" 
-                  data={filteredDataForAll} 
+                  data={paginatedDataForAll}
+                  fullDataCount={filteredDataForAll.length} 
                   allData={allBirths} 
                   renderFilterableHeader={renderFilterableHeader}
                   onEditClick={handleEditClick}
@@ -392,15 +404,27 @@ export default function BirthsPage() {
                   selectedBirths={selectedBirths}
                   onSelectBirth={handleSelectBirth}
                   onSelectAllBirths={() => handleSelectAllBirths(filteredDataForAll)}
+                  currentPage={currentPage}
+                  pageCount={pageCountForAll}
+                  onPageChange={setCurrentPage}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={(value) => {
+                    setRowsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
                 />
             </TabsContent>
             {farms.map(farm => {
               const farmFilteredData = getFilteredAndSortedData(allBirths.filter(b => b.farm === farm));
+              const farmPaginatedData = rowsPerPage > 0 ? farmFilteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage) : farmFilteredData;
+              const farmPageCount = rowsPerPage > 0 ? Math.ceil(farmFilteredData.length / rowsPerPage) : 1;
+
               return (
                 <TabsContent key={farm} value={farm}>
                     <CardWithTable 
                       title={`Nascimentos em ${farm}`} 
-                      data={farmFilteredData} 
+                      data={farmPaginatedData} 
+                      fullDataCount={farmFilteredData.length}
                       allData={allBirths} 
                       renderFilterableHeader={renderFilterableHeader} 
                       onEditClick={handleEditClick}
@@ -409,6 +433,14 @@ export default function BirthsPage() {
                       selectedBirths={selectedBirths}
                       onSelectBirth={handleSelectBirth}
                       onSelectAllBirths={() => handleSelectAllBirths(farmFilteredData)}
+                      currentPage={currentPage}
+                      pageCount={farmPageCount}
+                      onPageChange={setCurrentPage}
+                      rowsPerPage={rowsPerPage}
+                      onRowsPerPageChange={(value) => {
+                          setRowsPerPage(Number(value));
+                          setCurrentPage(1);
+                      }}
                     />
                 </TabsContent>
               )
@@ -464,6 +496,7 @@ export default function BirthsPage() {
 interface CardWithTableProps {
   title: string;
   data: Birth[];
+  fullDataCount: number;
   allData: Birth[];
   renderFilterableHeader: (column: ColumnKey, label: string, data: Birth[]) => React.ReactNode;
   onEditClick: (birth: Birth) => void;
@@ -472,14 +505,39 @@ interface CardWithTableProps {
   selectedBirths: string[];
   onSelectBirth: (birthId: string | undefined) => void;
   onSelectAllBirths: () => void;
+  currentPage: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
+  rowsPerPage: number;
+  onRowsPerPageChange: (value: string) => void;
 }
 
 
-function CardWithTable({ title, data, allData, renderFilterableHeader, onEditClick, onDeleteClick, onTransferClick, selectedBirths, onSelectBirth, onSelectAllBirths }: CardWithTableProps) {
+function CardWithTable({ 
+    title, 
+    data, 
+    fullDataCount,
+    allData, 
+    renderFilterableHeader, 
+    onEditClick, 
+    onDeleteClick, 
+    onTransferClick, 
+    selectedBirths, 
+    onSelectBirth, 
+    onSelectAllBirths,
+    currentPage,
+    pageCount,
+    onPageChange,
+    rowsPerPage,
+    onRowsPerPageChange
+}: CardWithTableProps) {
   return (
     <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
-      <div className="p-6">
+      <div className="p-6 flex justify-between items-center">
         <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
+        <div className="text-sm text-muted-foreground">
+            Total de registros: {fullDataCount}
+        </div>
       </div>
       <div className="p-0">
         <div className="overflow-x-auto">
@@ -572,9 +630,31 @@ function CardWithTable({ title, data, allData, renderFilterableHeader, onEditCli
           </Table>
         </div>
       </div>
-      <div className="p-6">
-        <PaginationComponent pageCount={5} />
+      <div className="flex items-center justify-between p-4 border-t">
+          <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Linhas por página:</span>
+              <Select value={`${rowsPerPage}`} onValueChange={onRowsPerPageChange}>
+                  <SelectTrigger className="w-[80px]">
+                      <SelectValue placeholder={`${rowsPerPage}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                      <SelectItem value="-1">Todas</SelectItem>
+                  </SelectContent>
+              </Select>
+          </div>
+          <PaginationComponent 
+              currentPage={currentPage}
+              pageCount={pageCount}
+              onPageChange={onPageChange}
+          />
       </div>
     </div>
   );
 }
+
+
+    
