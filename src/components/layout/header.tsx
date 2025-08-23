@@ -59,26 +59,27 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Logo />
-           <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
-                  <Button key={item.href} asChild variant="ghost" className={cn(pathname === item.href ? "text-primary" : "text-muted-foreground", "transition-colors")}>
-                      <Link href={item.href}>{item.label}</Link>
-                  </Button>
-              ))}
-          </nav>
+      <div className="container relative flex h-auto flex-col items-center justify-center gap-2 py-4">
+        {/* Desktop Layout */}
+        <div className="hidden w-full flex-col items-center gap-2 md:flex">
+            <Logo />
+            <nav className="flex items-center gap-1">
+                {navItems.map((item) => (
+                    <Button key={item.href} asChild variant="ghost" className={cn(pathname === item.href ? "text-primary" : "text-muted-foreground", "transition-colors")}>
+                        <Link href={item.href}>{item.label}</Link>
+                    </Button>
+                ))}
+            </nav>
         </div>
+        <Button variant="ghost" size="icon" className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:inline-flex" onClick={handleLogout} title="Sair">
+            <LogOut className="h-5 w-5" />
+        </Button>
 
-        <div className="flex items-center justify-end">
-           <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={handleLogout} title="Sair">
-                <LogOut className="h-5 w-5" />
-           </Button>
-
-          <Sheet>
+        {/* Mobile Layout */}
+        <div className="flex w-full items-center justify-between md:hidden">
+           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="md:hidden">
+              <Button variant="outline" size="icon">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Abrir menu</span>
               </Button>
@@ -113,6 +114,10 @@ export default function Header() {
               </div>
             </SheetContent>
           </Sheet>
+          <div className="flex-1 flex justify-center">
+            <Logo />
+          </div>
+           <div className="w-10"></div>
         </div>
       </div>
     </header>
