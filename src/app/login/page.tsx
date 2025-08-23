@@ -35,46 +35,43 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col md:flex-row">
-      <div className="relative hidden flex-1 items-center justify-center bg-muted md:flex">
-         <Image
-            src="https://placehold.co/1200x800.png"
-            alt="Paisagem de uma fazenda"
-            layout="fill"
-            objectFit="cover"
-            data-ai-hint="farm cattle"
-          />
-          <div className="absolute inset-0 bg-black/30" />
-      </div>
-       <div className="flex flex-1 items-center justify-center p-4">
-          <Card className="w-full max-w-sm">
-            <form onSubmit={handleLogin}>
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4">
-                  <Image src="/Icone DOIS.png" alt="DOIS Logo" width={80} height={80} />
-                </div>
-                <CardTitle className="text-2xl font-headline">Acessar o Sistema</CardTitle>
-                <CardDescription>Use suas credenciais para entrar.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="seu@email.com" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input id="password" type="password" required />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Entrar
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
-      </div>
+    <main className="relative flex min-h-screen w-full items-center justify-center p-4">
+      <Image
+        src="/imagem login.png"
+        alt="Paisagem de uma fazenda ao amanhecer"
+        layout="fill"
+        objectFit="cover"
+        className="-z-10"
+      />
+      <div className="absolute inset-0 bg-black/50 -z-10" />
+
+      <Card className="w-full max-w-sm">
+        <form onSubmit={handleLogin}>
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4">
+              <Image src="/Icone DOIS.png" alt="DOIS Logo" width={80} height={80} />
+            </div>
+            <CardTitle className="text-2xl font-headline">Acessar o Sistema</CardTitle>
+            <CardDescription>Use suas credenciais para entrar.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="seu@email.com" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input id="password" type="password" required />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Entrar
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
     </main>
   );
 }
