@@ -59,26 +59,23 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="container flex h-16 items-center">
+        {/* Left section for Logo */}
+        <div className="flex items-center">
           <Logo />
-          <nav className="hidden md:flex md:gap-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  pathname === item.href ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
         </div>
         
-        <div className="flex items-center gap-2">
+        {/* Center section for Navigation */}
+        <nav className="hidden md:flex flex-1 justify-center items-center gap-1">
+            {navItems.map((item) => (
+                <Button key={item.href} asChild variant="ghost" className={cn(pathname === item.href ? "text-primary" : "text-muted-foreground", "transition-colors")}>
+                    <Link href={item.href}>{item.label}</Link>
+                </Button>
+            ))}
+        </nav>
+
+        {/* Right section for Actions */}
+        <div className="flex items-center justify-end md:w-[100px]">
            <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={handleLogout} title="Sair">
                 <LogOut className="h-5 w-5" />
            </Button>
@@ -91,7 +88,7 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
-              <div className="flex h-full flex-col">
+              <div className="flex h-full flex-col p-0">
                 <div className="p-4 border-b">
                    <Logo />
                 </div>
