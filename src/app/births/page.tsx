@@ -247,67 +247,67 @@ export default function BirthsPage() {
 
     return (
         <TableHead>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent">
-                <span>{label}</span>
-                <ChevronDown className="h-4 w-4 ml-2" />
-            </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-60">
-                <DropdownMenuItem onClick={() => handleSort(column)}>
-                    <ArrowDownAZ className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-                    Ascendente
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={()={() => handleSort(column)}>
-                    <ArrowUpAZ className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-                    Descendente
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => clearFilter(column)}>
-                    <FilterX className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-                    Limpar Filtro
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <div className="p-2">
-                    <div className="relative">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Pesquisar..."
-                            className="pl-8"
-                            value={searchTerms[column]}
-                            onChange={(e) => handleSearchChange(column, e.target.value)}
-                        />
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent">
+                    <span>{label}</span>
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-60">
+                    <DropdownMenuItem onClick={() => handleSort(column)}>
+                        <ArrowDownAZ className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+                        Ascendente
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSort(column)}>
+                        <ArrowUpAZ className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+                        Descendente
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => clearFilter(column)}>
+                        <FilterX className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+                        Limpar Filtro
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <div className="p-2">
+                        <div className="relative">
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Pesquisar..."
+                                className="pl-8"
+                                value={searchTerms[column]}
+                                onChange={(e) => handleSearchChange(column, e.target.value)}
+                            />
+                        </div>
                     </div>
-                </div>
-                 <DropdownMenuCheckboxItem
-                    checked={filters[column].length === allUniqueValuesForSelectAll.length && allUniqueValuesForSelectAll.length > 0}
-                    onCheckedChange={() => {
-                        if (filters[column].length === allUniqueValuesForSelectAll.length) {
-                            clearFilter(column);
-                        } else {
-                            selectAll(column, allUniqueValuesForSelectAll);
-                        }
-                    }}
-                >
-                    (Selecionar Tudo)
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuSeparator />
-                <div className="max-h-40 overflow-y-auto">
-                    {uniqueValues.map(value => (
-                        <DropdownMenuCheckboxItem
-                        // @ts-ignore
-                        key={value}
-                        // @ts-ignore
-                        checked={filters[column].includes(String(value))}
-                        onCheckedChange={() => handleFilterChange(column, String(value))}
-                        >
-                        {String(value) || '(Vazio)'}
-                        </DropdownMenuCheckboxItem>
-                    ))}
-                </div>
-            </DropdownMenuContent>
-        </DropdownMenu>
+                    <DropdownMenuCheckboxItem
+                        checked={filters[column].length === allUniqueValuesForSelectAll.length && allUniqueValuesForSelectAll.length > 0}
+                        onCheckedChange={() => {
+                            if (filters[column].length === allUniqueValuesForSelectAll.length) {
+                                clearFilter(column);
+                            } else {
+                                selectAll(column, allUniqueValuesForSelectAll);
+                            }
+                        }}
+                    >
+                        (Selecionar Tudo)
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuSeparator />
+                    <div className="max-h-40 overflow-y-auto">
+                        {uniqueValues.map(value => (
+                            <DropdownMenuCheckboxItem
+                            // @ts-ignore
+                            key={value}
+                            // @ts-ignore
+                            checked={filters[column].includes(String(value))}
+                            onCheckedChange={() => handleFilterChange(column, String(value))}
+                            >
+                            {String(value) || '(Vazio)'}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </div>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </TableHead>
     );
   }
@@ -654,6 +654,8 @@ function CardWithTable({
   );
 }
 
+
+    
 
     
 
