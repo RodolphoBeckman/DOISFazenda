@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -34,11 +35,11 @@ const navItems = [
 function Logo() {
   return (
     <Image 
-      src="/logo.svg" 
+      src="/Icone DOIS.png" 
       alt="DOIS Logo" 
       width={32} 
       height={32} 
-      className="h-8 w-8 text-primary"
+      className="h-8 w-8"
     />
   );
 }
