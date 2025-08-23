@@ -484,84 +484,82 @@ function CardWithTable({
             Total de registros: {fullDataCount}
         </div>
       </div>
-      <div className="relative w-full overflow-auto">
-        <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">
+      <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50px]">
+                  <Checkbox
+                      checked={data.length > 0 && selectedCows.length === data.length}
+                      onCheckedChange={onSelectAllCows}
+                      aria-label="Selecionar todas as linhas"
+                  />
+              </TableHead>
+              {renderFilterableHeader('id', 'Brinco Nº')}
+              {renderFilterableHeader('animal', 'Animal')}
+              {renderFilterableHeader('origem', 'Origem')}
+              {renderFilterableHeader('lot', 'Lote')}
+              {renderFilterableHeader('obs1', 'Obs: 1')}
+              {renderFilterableHeader('farm', 'Fazenda')}
+              {renderFilterableHeader('location', 'Localização')}
+              {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
+              {renderFilterableHeader('mes', 'Mês')}
+              {renderFilterableHeader('ano', 'Ano')}
+              {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((cow, index) => (
+              <TableRow key={`${cow.id}-${index}`} data-state={selectedCows.includes(cow.id) ? "selected" : ""}>
+                <TableCell>
                     <Checkbox
-                        checked={data.length > 0 && selectedCows.length === data.length}
-                        onCheckedChange={onSelectAllCows}
-                        aria-label="Selecionar todas as linhas"
+                        checked={selectedCows.includes(cow.id)}
+                        onCheckedChange={() => onSelectCow(cow.id)}
+                        aria-label={`Selecionar linha ${index + 1}`}
                     />
-                </TableHead>
-                {renderFilterableHeader('id', 'Brinco Nº')}
-                {renderFilterableHeader('animal', 'Animal')}
-                {renderFilterableHeader('origem', 'Origem')}
-                {renderFilterableHeader('lot', 'Lote')}
-                {renderFilterableHeader('obs1', 'Obs: 1')}
-                {renderFilterableHeader('farm', 'Fazenda')}
-                {renderFilterableHeader('location', 'Localização')}
-                {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
-                {renderFilterableHeader('mes', 'Mês')}
-                {renderFilterableHeader('ano', 'Ano')}
-                {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
-                <TableHead className="text-right">Ações</TableHead>
+                </TableCell>
+                <TableCell className="font-medium">{cow.id}</TableCell>
+                <TableCell>{cow.animal}</TableCell>
+                <TableCell>{cow.origem}</TableCell>
+                <TableCell>{cow.lot}</TableCell>
+                <TableCell>{cow.obs1 || '-'}</TableCell>
+                <TableCell>{cow.farm}</TableCell>
+                <TableCell>{cow.location}</TableCell>
+                <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
+                <TableCell>{cow.mes || '-'}</TableCell>
+                <TableCell>{cow.ano || '-'}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      cow.registrationStatus === 'Ativo'
+                        ? 'default'
+                        : 'destructive'
+                    }
+                    className={cow.registrationStatus === 'Ativo' ? 'bg-green-600' : ''}
+                  >
+                    {cow.registrationStatus}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end">
+                    <Button variant="ghost" size="icon" onClick={() => onEditClick(cow)}>
+                        <PencilRuler className="h-4 w-4" />
+                        <span className="sr-only">Editar</span>
+                    </Button>
+                      <Button variant="ghost" size="icon" onClick={() => onDiscardClick(cow)} disabled={cow.registrationStatus === 'Inativo'}>
+                        <Archive className="h-4 w-4" />
+                        <span className="sr-only">Descartar</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Excluir</span>
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((cow, index) => (
-                <TableRow key={`${cow.id}-${index}`} data-state={selectedCows.includes(cow.id) ? "selected" : ""}>
-                  <TableCell>
-                      <Checkbox
-                          checked={selectedCows.includes(cow.id)}
-                          onCheckedChange={() => onSelectCow(cow.id)}
-                          aria-label={`Selecionar linha ${index + 1}`}
-                      />
-                  </TableCell>
-                  <TableCell className="font-medium">{cow.id}</TableCell>
-                  <TableCell>{cow.animal}</TableCell>
-                  <TableCell>{cow.origem}</TableCell>
-                  <TableCell>{cow.lot}</TableCell>
-                  <TableCell>{cow.obs1 || '-'}</TableCell>
-                  <TableCell>{cow.farm}</TableCell>
-                  <TableCell>{cow.location}</TableCell>
-                  <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
-                  <TableCell>{cow.mes || '-'}</TableCell>
-                  <TableCell>{cow.ano || '-'}</TableCell>
-                  <TableCell>
-                   <Badge
-                      variant={
-                        cow.registrationStatus === 'Ativo'
-                          ? 'default'
-                          : 'destructive'
-                      }
-                      className={cow.registrationStatus === 'Ativo' ? 'bg-green-600' : ''}
-                    >
-                      {cow.registrationStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end">
-                      <Button variant="ghost" size="icon" onClick={() => onEditClick(cow)}>
-                          <PencilRuler className="h-4 w-4" />
-                          <span className="sr-only">Editar</span>
-                      </Button>
-                       <Button variant="ghost" size="icon" onClick={() => onDiscardClick(cow)} disabled={cow.registrationStatus === 'Inativo'}>
-                          <Archive className="h-4 w-4" />
-                          <span className="sr-only">Descartar</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                          <span className="sr-only">Excluir</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-      </div>
+            ))}
+          </TableBody>
+        </Table>
        <div className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Linhas por página:</span>
@@ -588,5 +586,7 @@ function CardWithTable({
   );
 }
 
+
+    
 
     

@@ -539,95 +539,93 @@ function CardWithTable({
             Total de registros: {fullDataCount}
         </div>
       </div>
-      <div className="relative w-full overflow-auto">
-        <Table>
-            <TableHeader>
-              <TableRow>
-                 <TableHead className="w-[50px]">
-                    <Checkbox
-                        checked={data.length > 0 && selectedBirths.length === data.length}
-                        onCheckedChange={onSelectAllBirths}
-                        aria-label="Selecionar todas as linhas"
-                    />
-                </TableHead>
-                {renderFilterableHeader('cowId', 'Brinco Nº', allData)}
-                {renderFilterableHeader('sex', 'Sexo do Bezerro', allData)}
-                {renderFilterableHeader('breed', 'Raça do Bezerro', allData)}
-                {renderFilterableHeader('sire', 'Nome do Pai', allData)}
-                {renderFilterableHeader('date', 'Data Nascimento', allData)}
-                {renderFilterableHeader('lot', 'Lote', allData)}
-                {renderFilterableHeader('obs1', 'Obs: 1', allData)}
-                {renderFilterableHeader('jvvo', 'JV - Vo', allData)}
-                {renderFilterableHeader('farm', 'Fazenda', allData)}
-                {renderFilterableHeader('location', 'Localização', allData)}
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((birth, index) => (
-                <TableRow 
-                  key={`${birth.id}-${birth.cowId}-${index}`}
-                  data-state={birth.id && selectedBirths.includes(birth.id) ? "selected" : ""}
-                >
-                   <TableCell>
-                      <Checkbox
-                          checked={birth.id ? selectedBirths.includes(birth.id) : false}
-                          onCheckedChange={() => onSelectBirth(birth.id)}
-                          aria-label={`Selecionar linha ${index + 1}`}
-                          disabled={!birth.id}
-                      />
-                  </TableCell>
-                  <TableCell className="font-medium">{birth.cowId}</TableCell>
+      <Table>
+          <TableHeader>
+            <TableRow>
+                <TableHead className="w-[50px]">
+                  <Checkbox
+                      checked={data.length > 0 && selectedBirths.length === data.length}
+                      onCheckedChange={onSelectAllBirths}
+                      aria-label="Selecionar todas as linhas"
+                  />
+              </TableHead>
+              {renderFilterableHeader('cowId', 'Brinco Nº', allData)}
+              {renderFilterableHeader('sex', 'Sexo do Bezerro', allData)}
+              {renderFilterableHeader('breed', 'Raça do Bezerro', allData)}
+              {renderFilterableHeader('sire', 'Nome do Pai', allData)}
+              {renderFilterableHeader('date', 'Data Nascimento', allData)}
+              {renderFilterableHeader('lot', 'Lote', allData)}
+              {renderFilterableHeader('obs1', 'Obs: 1', allData)}
+              {renderFilterableHeader('jvvo', 'JV - Vo', allData)}
+              {renderFilterableHeader('farm', 'Fazenda', allData)}
+              {renderFilterableHeader('location', 'Localização', allData)}
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((birth, index) => (
+              <TableRow 
+                key={`${birth.id}-${birth.cowId}-${index}`}
+                data-state={birth.id && selectedBirths.includes(birth.id) ? "selected" : ""}
+              >
                   <TableCell>
-                    {birth.sex ? (
-                      <Badge
-                        variant={
-                           birth.sex === 'Aborto'
-                            ? 'destructive'
-                            : birth.sex === 'Macho'
-                            ? 'secondary'
-                            : birth.sex === 'Fêmea'
-                            ? 'default'
-                            : 'outline'
-                        }
-                      >
-                        {birth.sex}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">Não Definido</Badge>
+                    <Checkbox
+                        checked={birth.id ? selectedBirths.includes(birth.id) : false}
+                        onCheckedChange={() => onSelectBirth(birth.id)}
+                        aria-label={`Selecionar linha ${index + 1}`}
+                        disabled={!birth.id}
+                    />
+                </TableCell>
+                <TableCell className="font-medium">{birth.cowId}</TableCell>
+                <TableCell>
+                  {birth.sex ? (
+                    <Badge
+                      variant={
+                          birth.sex === 'Aborto'
+                          ? 'destructive'
+                          : birth.sex === 'Macho'
+                          ? 'secondary'
+                          : birth.sex === 'Fêmea'
+                          ? 'default'
+                          : 'outline'
+                      }
+                    >
+                      {birth.sex}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline">Não Definido</Badge>
+                  )}
+                </TableCell>
+                <TableCell>{birth.breed || '-'}</TableCell>
+                <TableCell>{birth.sire || '-'}</TableCell>
+                <TableCell>{birth.date ? new Date(birth.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'}</TableCell>
+                <TableCell>{birth.lot || '-'}</TableCell>
+                <TableCell>{birth.obs1 || '-'}</TableCell>
+                <TableCell>{birth.jvvo || '-'}</TableCell>
+                <TableCell>{birth.farm || '-'}</TableCell>
+                <TableCell>{birth.location || '-'}</TableCell>
+                  <TableCell className="text-right">
+                  <div className="flex items-center justify-end">
+                    {(birth.sex === 'Fêmea' || birth.sex === 'Macho') && (
+                      <Button variant="ghost" size="icon" title="Transferir para Rebanho" onClick={() => onTransferClick(birth)}>
+                          <Send className="h-4 w-4" />
+                          <span className="sr-only">Transferir</span>
+                      </Button>
                     )}
-                  </TableCell>
-                  <TableCell>{birth.breed || '-'}</TableCell>
-                  <TableCell>{birth.sire || '-'}</TableCell>
-                  <TableCell>{birth.date ? new Date(birth.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Data não informada'}</TableCell>
-                  <TableCell>{birth.lot || '-'}</TableCell>
-                  <TableCell>{birth.obs1 || '-'}</TableCell>
-                  <TableCell>{birth.jvvo || '-'}</TableCell>
-                  <TableCell>{birth.farm || '-'}</TableCell>
-                  <TableCell>{birth.location || '-'}</TableCell>
-                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end">
-                      {(birth.sex === 'Fêmea' || birth.sex === 'Macho') && (
-                        <Button variant="ghost" size="icon" title="Transferir para Rebanho" onClick={() => onTransferClick(birth)}>
-                            <Send className="h-4 w-4" />
-                            <span className="sr-only">Transferir</span>
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" onClick={() => onEditClick(birth)}>
-                          <PencilRuler className="h-4 w-4" />
-                          <span className="sr-only">Editar</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onDeleteClick(birth)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                          <span className="sr-only">Excluir</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-      </div>
+                    <Button variant="ghost" size="icon" onClick={() => onEditClick(birth)}>
+                        <PencilRuler className="h-4 w-4" />
+                        <span className="sr-only">Editar</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onDeleteClick(birth)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Excluir</span>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       <div className="flex items-center justify-between p-4 border-t">
           <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Linhas por página:</span>
@@ -653,5 +651,7 @@ function CardWithTable({
     </div>
   );
 }
+
+    
 
     
