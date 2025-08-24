@@ -141,11 +141,11 @@ export default function CowsPage() {
         lot: cowForBirth.lot,
         location: cowForBirth.location,
         sex: "Não Definido",
-        animal: "Gestação",
+        animal: "Prenhez",
       });
       toast({
-        title: "Gestação Registrada!",
-        description: `Uma nova gestação foi criada para a vaca Nº ${cowForBirth.id}.`,
+        title: "Prenhez Registrada!",
+        description: `Uma nova prenhez foi criada para a vaca Nº ${cowForBirth.id}.`,
       });
       setIsBirthAlertOpen(false);
       setCowForBirth(null);
@@ -508,9 +508,9 @@ export default function CowsPage() {
       <AlertDialog open={isBirthAlertOpen} onOpenChange={setIsBirthAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Gestação</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar Prenhez</AlertDialogTitle>
             <AlertDialogDescription>
-               Deseja realmente registrar uma nova gestação para a vaca com brinco
+               Deseja realmente registrar uma nova prenhez para a vaca com brinco
               <span className="font-bold"> Nº {cowForBirth?.id}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -562,13 +562,14 @@ function CardWithTable({
     onRowsPerPageChange
 }: CardWithTableProps) {
   return (
-    <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
-      <div className="p-6 flex justify-between items-center">
-        <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
-         <div className="text-sm text-muted-foreground">
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <div className="text-sm text-muted-foreground">
             Total de registros: {fullDataCount}
         </div>
-      </div>
+      </CardHeader>
+      <CardContent>
        <div className="relative w-full overflow-auto">
           <Table>
               <TableHeader>
@@ -628,9 +629,9 @@ function CardWithTable({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
-                        <Button variant="ghost" size="icon" title="Registrar Gestação" onClick={() => onCreatePregnancyClick(cow)}>
+                        <Button variant="ghost" size="icon" title="Registrar Prenhez" onClick={() => onCreatePregnancyClick(cow)}>
                             <Heart className="h-4 w-4" />
-                            <span className="sr-only">Registrar Gestação</span>
+                            <span className="sr-only">Registrar Prenhez</span>
                         </Button>
                         <Button variant="ghost" size="icon" title="Editar Vaca" onClick={() => onEditClick(cow)}>
                             <PencilRuler className="h-4 w-4" />
@@ -651,7 +652,8 @@ function CardWithTable({
               </TableBody>
             </Table>
        </div>
-       <div className="flex items-center justify-between p-4 border-t">
+      </CardContent>
+       <CardFooter className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Linhas por página:</span>
                 <Select value={`${rowsPerPage}`} onValueChange={(value) => {
@@ -675,7 +677,7 @@ function CardWithTable({
                 pageCount={pageCount}
                 onPageChange={onPageChange}
             />
-        </div>
-    </div>
+        </CardFooter>
+    </Card>
   );
 }
