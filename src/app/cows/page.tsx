@@ -37,10 +37,10 @@ import {
 } from "@/components/ui/alert-dialog"
 
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive, Users, GitCommitVertical, GitBranch, Download, Baby } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive, Users, GitCommitVertical, GitBranch, Download, Heart } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import { useData } from '@/contexts/data-context';
 import type { Cow } from '@/lib/data-schemas';
@@ -116,7 +116,7 @@ export default function CowsPage() {
     setIsDeleteAlertOpen(true);
   };
   
-  const handleCreateBirthClick = (cow: Cow) => {
+  const handleCreatePregnancyClick = (cow: Cow) => {
     setCowForBirth(cow);
     setIsBirthAlertOpen(true);
   };
@@ -133,19 +133,19 @@ export default function CowsPage() {
     }
   };
 
-  const handleConfirmBirth = () => {
+  const handleConfirmPregnancy = () => {
     if (cowForBirth) {
       addBirth({
         cowId: cowForBirth.id,
-        date: new Date(),
         farm: cowForBirth.farm,
         lot: cowForBirth.lot,
         location: cowForBirth.location,
         sex: "Não Definido",
+        animal: "Gestação",
       });
       toast({
-        title: "Nascimento Registrado!",
-        description: `Um novo nascimento foi criado para a vaca Nº ${cowForBirth.id}. Verifique a aba de Nascimentos.`,
+        title: "Gestação Registrada!",
+        description: `Uma nova gestação foi criada para a vaca Nº ${cowForBirth.id}.`,
       });
       setIsBirthAlertOpen(false);
       setCowForBirth(null);
@@ -426,7 +426,7 @@ export default function CowsPage() {
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteClick}
                 onDiscardClick={handleDiscardClick}
-                onCreateBirthClick={handleCreateBirthClick}
+                onCreatePregnancyClick={handleCreatePregnancyClick}
                 selectedCows={selectedCows}
                 onSelectCow={handleSelectCow}
                 onSelectAllCows={() => handleSelectAllCows(filteredData)}
@@ -455,7 +455,7 @@ export default function CowsPage() {
                             onEditClick={handleEditClick}
                             onDeleteClick={handleDeleteClick}
                             onDiscardClick={handleDiscardClick}
-                            onCreateBirthClick={handleCreateBirthClick}
+                            onCreatePregnancyClick={handleCreatePregnancyClick}
                             selectedCows={selectedCows}
                             onSelectCow={handleSelectCow}
                             onSelectAllCows={() => handleSelectAllCows(statusFilteredData)}
@@ -508,15 +508,15 @@ export default function CowsPage() {
       <AlertDialog open={isBirthAlertOpen} onOpenChange={setIsBirthAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Nascimento</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar Gestação</AlertDialogTitle>
             <AlertDialogDescription>
-               Deseja realmente registrar um novo nascimento para a vaca com brinco
-              <span className="font-bold"> Nº {cowForBirth?.id}</span>? Um novo registro de nascimento será criado com a data de hoje.
+               Deseja realmente registrar uma nova gestação para a vaca com brinco
+              <span className="font-bold"> Nº {cowForBirth?.id}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCowForBirth(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmBirth}>Sim, Registrar</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmPregnancy}>Sim, Registrar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -532,7 +532,7 @@ interface CardWithTableProps {
     onEditClick: (cow: Cow) => void;
     onDeleteClick: (cow: Cow) => void;
     onDiscardClick: (cow: Cow) => void;
-    onCreateBirthClick: (cow: Cow) => void;
+    onCreatePregnancyClick: (cow: Cow) => void;
     selectedCows: string[];
     onSelectCow: (cowId: string) => void;
     onSelectAllCows: () => void;
@@ -551,7 +551,7 @@ function CardWithTable({
     onEditClick, 
     onDeleteClick, 
     onDiscardClick,
-    onCreateBirthClick,
+    onCreatePregnancyClick,
     selectedCows, 
     onSelectCow, 
     onSelectAllCows,
@@ -562,14 +562,14 @@ function CardWithTable({
     onRowsPerPageChange
 }: CardWithTableProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <div className="text-sm text-muted-foreground">
+    <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
+      <div className="p-6 flex justify-between items-center">
+        <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
+         <div className="text-sm text-muted-foreground">
             Total de registros: {fullDataCount}
         </div>
-      </CardHeader>
-      <CardContent className="p-0">
+      </div>
+       <div className="relative w-full overflow-auto">
           <Table>
               <TableHeader>
                 <TableRow>
@@ -628,9 +628,9 @@ function CardWithTable({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
-                        <Button variant="ghost" size="icon" title="Registrar Nascimento" onClick={() => onCreateBirthClick(cow)}>
-                            <Baby className="h-4 w-4" />
-                            <span className="sr-only">Registrar Nascimento</span>
+                        <Button variant="ghost" size="icon" title="Registrar Gestação" onClick={() => onCreatePregnancyClick(cow)}>
+                            <Heart className="h-4 w-4" />
+                            <span className="sr-only">Registrar Gestação</span>
                         </Button>
                         <Button variant="ghost" size="icon" title="Editar Vaca" onClick={() => onEditClick(cow)}>
                             <PencilRuler className="h-4 w-4" />
@@ -650,8 +650,8 @@ function CardWithTable({
                 ))}
               </TableBody>
             </Table>
-      </CardContent>
-       <CardFooter className="flex items-center justify-between p-4 border-t">
+       </div>
+       <div className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Linhas por página:</span>
                 <Select value={`${rowsPerPage}`} onValueChange={(value) => {
@@ -675,7 +675,7 @@ function CardWithTable({
                 pageCount={pageCount}
                 onPageChange={onPageChange}
             />
-        </CardFooter>
-    </Card>
+        </div>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from 'react';
@@ -305,60 +304,60 @@ export default function IATFsPage() {
                 <h3 className="text-xl font-semibold tracking-tight">Todos os Registros</h3>
             </div>
             <div className="relative w-full overflow-auto">
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        {renderFilterableHeader('cowId', 'Brinco Nº', iatfs)}
-                        {renderFilterableHeader('inseminationDate', 'Data Inseminação', iatfs)}
-                        {renderFilterableHeader('bull', 'Touro', iatfs)}
-                        {renderFilterableHeader('protocol', 'Protocolo', iatfs)}
-                        {renderFilterableHeader('diagnosisDate', 'Data Diagnóstico', iatfs)}
-                        {renderFilterableHeader('result', 'Resultado', iatfs)}
-                        <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {filteredData.map((iatf) => (
-                        <TableRow key={iatf.id}>
-                        <TableCell className="font-medium">{iatf.cowId}</TableCell>
-                        <TableCell>{iatf.inseminationDate ? format(new Date(iatf.inseminationDate), 'dd/MM/yyyy') : '-'}</TableCell>
-                        <TableCell>{iatf.bull || '-'}</TableCell>
-                        <TableCell>{iatf.protocol || '-'}</TableCell>
-                        <TableCell>{iatf.diagnosisDate ? format(new Date(iatf.diagnosisDate), 'dd/MM/yyyy') : '-'}</TableCell>
-                        <TableCell>
-                            {iatf.result ? (
-                            <Badge
-                                variant={
-                                iatf.result === 'Prenha'
-                                    ? 'default'
-                                    : iatf.result === 'Vazia'
-                                    ? 'destructive'
-                                    : 'secondary'
-                                }
-                                className={iatf.result === 'Prenha' ? 'bg-green-600' : ''}
-                            >
-                                {iatf.result}
-                            </Badge>
-                            ) : (
-                            <Badge variant="outline">Não checado</Badge>
-                            )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <div className="flex items-center justify-end">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(iatf)}>
-                                <PencilRuler className="h-4 w-4" />
-                                <span className="sr-only">Editar</span>
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(iatf)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                                <span className="sr-only">Excluir</span>
-                            </Button>
-                            </div>
-                        </TableCell>
-                        </TableRow>
-                    ))}
-                    </TableBody>
-                </Table>
+              <Table>
+                      <TableHeader>
+                      <TableRow>
+                          {renderFilterableHeader('cowId', 'Brinco Nº', iatfs)}
+                          {renderFilterableHeader('inseminationDate', 'Data Inseminação', iatfs)}
+                          {renderFilterableHeader('bull', 'Touro', iatfs)}
+                          {renderFilterableHeader('protocol', 'Protocolo', iatfs)}
+                          {renderFilterableHeader('diagnosisDate', 'Data Diagnóstico', iatfs)}
+                          {renderFilterableHeader('result', 'Resultado', iatfs)}
+                          <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                      {filteredData.map((iatf) => (
+                          <TableRow key={iatf.id}>
+                          <TableCell className="font-medium">{iatf.cowId}</TableCell>
+                          <TableCell>{iatf.inseminationDate ? format(new Date(iatf.inseminationDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                          <TableCell>{iatf.bull || '-'}</TableCell>
+                          <TableCell>{iatf.protocol || '-'}</TableCell>
+                          <TableCell>{iatf.diagnosisDate ? format(new Date(iatf.diagnosisDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                          <TableCell>
+                              {iatf.result ? (
+                              <Badge
+                                  variant={
+                                  iatf.result === 'Prenha'
+                                      ? 'default'
+                                      : iatf.result === 'Vazia'
+                                      ? 'destructive'
+                                      : 'secondary'
+                                  }
+                                  className={iatf.result === 'Prenha' ? 'bg-green-600' : ''}
+                              >
+                                  {iatf.result}
+                              </Badge>
+                              ) : (
+                              <Badge variant="outline">Não checado</Badge>
+                              )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                              <div className="flex items-center justify-end">
+                              <Button variant="ghost" size="icon" onClick={() => handleEditClick(iatf)}>
+                                  <PencilRuler className="h-4 w-4" />
+                                  <span className="sr-only">Editar</span>
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(iatf)}>
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                  <span className="sr-only">Excluir</span>
+                              </Button>
+                              </div>
+                          </TableCell>
+                          </TableRow>
+                      ))}
+                      </TableBody>
+                  </Table>
             </div>
             <div className="p-6 border-t">
                 <PaginationComponent pageCount={5} />
@@ -388,5 +387,3 @@ export default function IATFsPage() {
     </main>
   );
 }
-
-    
