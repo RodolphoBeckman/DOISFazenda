@@ -207,6 +207,15 @@ export default function CowsPage() {
       filteredData.sort((a, b) => {
         const aValue = a[sort.column!];
         const bValue = b[sort.column!];
+        
+        if (sort.column === 'id') {
+             const numA = parseInt(aValue, 10);
+             const numB = parseInt(bValue, 10);
+             if (numA < numB) return sort.direction === 'asc' ? -1 : 1;
+             if (numA > numB) return sort.direction === 'asc' ? 1 : -1;
+             return 0;
+        }
+
         // @ts-ignore
         if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
         // @ts-ignore
@@ -565,9 +574,6 @@ function CardWithTable({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <div className="text-sm text-muted-foreground">
-            Total de registros: {fullDataCount}
-        </div>
       </CardHeader>
       <CardContent>
        <div className="relative w-full overflow-auto">
@@ -671,6 +677,9 @@ function CardWithTable({
                         <SelectItem value="-1">Todas</SelectItem>
                     </SelectContent>
                 </Select>
+            </div>
+            <div className="text-sm text-muted-foreground">
+                Total de registros: {fullDataCount}
             </div>
             <PaginationComponent 
                 currentPage={currentPage}
