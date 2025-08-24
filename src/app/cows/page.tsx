@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from 'react';
@@ -41,7 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
-import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive, Users, GitCommitVertical, GitBranch, Download } from "lucide-react"
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive, Users, GitCommitVertical, GitBranch, Download, Baby } from "lucide-react"
 import { Input } from '@/components/ui/input';
 import { useData } from '@/contexts/data-context';
 import type { Cow } from '@/lib/data-schemas';
@@ -58,7 +57,7 @@ type ColumnKey = keyof Cow;
 type SortDirection = 'asc' | 'desc' | null;
 
 export default function CowsPage() {
-  const { data: allCows, deleteCow } = useData();
+  const { data: allCows, deleteCow, addBirth } = useData();
   const { toast } = useToast();
 
   const [filters, setFilters] = React.useState<Record<ColumnKey, string[]>>({
@@ -74,8 +73,10 @@ export default function CowsPage() {
   const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = React.useState(false);
   const [selectedCow, setSelectedCow] = React.useState<Cow | null>(null);
   const [selectedCows, setSelectedCows] = React.useState<string[]>([]);
-  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
+  const [isBirthAlertOpen, setIsBirthAlertOpen] = React.useState(false);
   const [cowToDelete, setCowToDelete] = React.useState<Cow | null>(null);
+  const [cowForBirth, setCowForBirth] = React.useState<Cow | null>(null);
   const [activeTab, setActiveTab] = React.useState('all');
   
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -112,7 +113,12 @@ export default function CowsPage() {
 
   const handleDeleteClick = (cow: Cow) => {
     setCowToDelete(cow);
-    setIsAlertOpen(true);
+    setIsDeleteAlertOpen(true);
+  };
+  
+  const handleCreateBirthClick = (cow: Cow) => {
+    setCowForBirth(cow);
+    setIsBirthAlertOpen(true);
   };
 
   const handleConfirmDelete = () => {
@@ -122,10 +128,30 @@ export default function CowsPage() {
         title: "Vaca Excluída",
         description: `A vaca com brinco Nº ${cowToDelete.id} foi removida.`,
       });
-      setIsAlertOpen(false);
+      setIsDeleteAlertOpen(false);
       setCowToDelete(null);
     }
   };
+
+  const handleConfirmBirth = () => {
+    if (cowForBirth) {
+      addBirth({
+        cowId: cowForBirth.id,
+        date: new Date(),
+        farm: cowForBirth.farm,
+        lot: cowForBirth.lot,
+        location: cowForBirth.location,
+        sex: "Não Definido",
+      });
+      toast({
+        title: "Nascimento Registrado!",
+        description: `Um novo nascimento foi criado para a vaca Nº ${cowForBirth.id}. Verifique a aba de Nascimentos.`,
+      });
+      setIsBirthAlertOpen(false);
+      setCowForBirth(null);
+    }
+  };
+
 
   const handleSelectCow = (cowId: string) => {
     setSelectedCows(prev =>
@@ -400,6 +426,7 @@ export default function CowsPage() {
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteClick}
                 onDiscardClick={handleDiscardClick}
+                onCreateBirthClick={handleCreateBirthClick}
                 selectedCows={selectedCows}
                 onSelectCow={handleSelectCow}
                 onSelectAllCows={() => handleSelectAllCows(filteredData)}
@@ -428,6 +455,7 @@ export default function CowsPage() {
                             onEditClick={handleEditClick}
                             onDeleteClick={handleDeleteClick}
                             onDiscardClick={handleDiscardClick}
+                            onCreateBirthClick={handleCreateBirthClick}
                             selectedCows={selectedCows}
                             onSelectCow={handleSelectCow}
                             onSelectAllCows={() => handleSelectAllCows(statusFilteredData)}
@@ -462,7 +490,7 @@ export default function CowsPage() {
         cowIds={selectedCows}
         onSuccess={() => setSelectedCows([])}
       />
-      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
@@ -474,6 +502,21 @@ export default function CowsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCowToDelete(null)}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={isBirthAlertOpen} onOpenChange={setIsBirthAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Nascimento</AlertDialogTitle>
+            <AlertDialogDescription>
+               Deseja realmente registrar um novo nascimento para a vaca com brinco
+              <span className="font-bold"> Nº {cowForBirth?.id}</span>? Um novo registro de nascimento será criado com a data de hoje.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCowForBirth(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmBirth}>Sim, Registrar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -489,6 +532,7 @@ interface CardWithTableProps {
     onEditClick: (cow: Cow) => void;
     onDeleteClick: (cow: Cow) => void;
     onDiscardClick: (cow: Cow) => void;
+    onCreateBirthClick: (cow: Cow) => void;
     selectedCows: string[];
     onSelectCow: (cowId: string) => void;
     onSelectAllCows: () => void;
@@ -506,7 +550,8 @@ function CardWithTable({
     renderFilterableHeader, 
     onEditClick, 
     onDeleteClick, 
-    onDiscardClick, 
+    onDiscardClick,
+    onCreateBirthClick,
     selectedCows, 
     onSelectCow, 
     onSelectAllCows,
@@ -517,95 +562,103 @@ function CardWithTable({
     onRowsPerPageChange
 }: CardWithTableProps) {
   return (
-    <div className="border bg-card text-card-foreground shadow-sm rounded-lg mt-4">
-      <div className="p-6 flex justify-between items-center">
-        <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
-         <div className="text-sm text-muted-foreground">
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <div className="text-sm text-muted-foreground">
             Total de registros: {fullDataCount}
         </div>
-      </div>
-      <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">
-                    <Checkbox
-                        checked={data.length > 0 && selectedCows.length === data.length}
-                        onCheckedChange={onSelectAllCows}
-                        aria-label="Selecionar todas as linhas"
-                    />
-                </TableHead>
-                {renderFilterableHeader('id', 'Brinco Nº')}
-                {renderFilterableHeader('animal', 'Animal')}
-                {renderFilterableHeader('origem', 'Origem')}
-                {renderFilterableHeader('lot', 'Lote')}
-                {renderFilterableHeader('obs1', 'Obs: 1')}
-                {renderFilterableHeader('farm', 'Fazenda')}
-                {renderFilterableHeader('location', 'Localização')}
-                {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
-                {renderFilterableHeader('mes', 'Mês')}
-                {renderFilterableHeader('ano', 'Ano')}
-                {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((cow, index) => (
-                <TableRow key={`${cow.id}-${index}`} data-state={selectedCows.includes(cow.id) ? "selected" : ""}>
-                  <TableCell>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">
                       <Checkbox
-                          checked={selectedCows.includes(cow.id)}
-                          onCheckedChange={() => onSelectCow(cow.id)}
-                          aria-label={`Selecionar linha ${index + 1}`}
+                          checked={data.length > 0 && selectedCows.length === data.length}
+                          onCheckedChange={onSelectAllCows}
+                          aria-label="Selecionar todas as linhas"
                       />
-                  </TableCell>
-                  <TableCell className="font-medium">{cow.id}</TableCell>
-                  <TableCell>{cow.animal}</TableCell>
-                  <TableCell>{cow.origem}</TableCell>
-                  <TableCell>{cow.lot}</TableCell>
-                  <TableCell>{cow.obs1 || '-'}</TableCell>
-                  <TableCell>{cow.farm}</TableCell>
-                  <TableCell>{cow.location}</TableCell>
-                  <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
-                  <TableCell>{cow.mes || '-'}</TableCell>
-                  <TableCell>{cow.ano || '-'}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        cow.registrationStatus === 'Ativo'
-                          ? 'default'
-                          : 'destructive'
-                      }
-                      className={cow.registrationStatus === 'Ativo' ? 'bg-green-600' : ''}
-                    >
-                      {cow.registrationStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end">
-                      <Button variant="ghost" size="icon" onClick={() => onEditClick(cow)}>
-                          <PencilRuler className="h-4 w-4" />
-                          <span className="sr-only">Editar</span>
-                      </Button>
-                        <Button variant="ghost" size="icon" onClick={() => onDiscardClick(cow)} disabled={cow.registrationStatus === 'Inativo'}>
-                          <Archive className="h-4 w-4" />
-                          <span className="sr-only">Descartar</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onDeleteClick(cow)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                          <span className="sr-only">Excluir</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+                  </TableHead>
+                  {renderFilterableHeader('id', 'Brinco Nº')}
+                  {renderFilterableHeader('animal', 'Animal')}
+                  {renderFilterableHeader('origem', 'Origem')}
+                  {renderFilterableHeader('lot', 'Lote')}
+                  {renderFilterableHeader('obs1', 'Obs: 1')}
+                  {renderFilterableHeader('farm', 'Fazenda')}
+                  {renderFilterableHeader('location', 'Localização')}
+                  {renderFilterableHeader('motivoDoDescarte', 'Motivo do Descarte')}
+                  {renderFilterableHeader('mes', 'Mês')}
+                  {renderFilterableHeader('ano', 'Ano')}
+                  {renderFilterableHeader('registrationStatus', 'Status do Cadastro')}
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-       <div className="flex items-center justify-between p-4 border-t">
+              </TableHeader>
+              <TableBody>
+                {data.map((cow, index) => (
+                  <TableRow key={`${cow.id}-${index}`} data-state={selectedCows.includes(cow.id) ? "selected" : ""}>
+                    <TableCell>
+                        <Checkbox
+                            checked={selectedCows.includes(cow.id)}
+                            onCheckedChange={() => onSelectCow(cow.id)}
+                            aria-label={`Selecionar linha ${index + 1}`}
+                        />
+                    </TableCell>
+                    <TableCell className="font-medium">{cow.id}</TableCell>
+                    <TableCell>{cow.animal}</TableCell>
+                    <TableCell>{cow.origem}</TableCell>
+                    <TableCell>{cow.lot}</TableCell>
+                    <TableCell>{cow.obs1 || '-'}</TableCell>
+                    <TableCell>{cow.farm}</TableCell>
+                    <TableCell>{cow.location}</TableCell>
+                    <TableCell>{cow.motivoDoDescarte || '-'}</TableCell>
+                    <TableCell>{cow.mes || '-'}</TableCell>
+                    <TableCell>{cow.ano || '-'}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          cow.registrationStatus === 'Ativo'
+                            ? 'default'
+                            : 'destructive'
+                        }
+                        className={cow.registrationStatus === 'Ativo' ? 'bg-green-600' : ''}
+                      >
+                        {cow.registrationStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end">
+                        <Button variant="ghost" size="icon" title="Registrar Nascimento" onClick={() => onCreateBirthClick(cow)}>
+                            <Baby className="h-4 w-4" />
+                            <span className="sr-only">Registrar Nascimento</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Editar Vaca" onClick={() => onEditClick(cow)}>
+                            <PencilRuler className="h-4 w-4" />
+                            <span className="sr-only">Editar</span>
+                        </Button>
+                          <Button variant="ghost" size="icon" title="Descartar Vaca" onClick={() => onDiscardClick(cow)} disabled={cow.registrationStatus === 'Inativo'}>
+                            <Archive className="h-4 w-4" />
+                            <span className="sr-only">Descartar</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Excluir Vaca" onClick={() => onDeleteClick(cow)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <span className="sr-only">Excluir</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+      </CardContent>
+       <CardFooter className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Linhas por página:</span>
                 <Select value={`${rowsPerPage}`} onValueChange={(value) => {
-                  setRowsPerPage(Number(value));
-                  setCurrentPage(1);
+                  onRowsPerPageChange(value);
+                  onPageChange(1);
                 }}>
                     <SelectTrigger className="w-[80px]">
                         <SelectValue placeholder={`${rowsPerPage}`} />
@@ -624,7 +677,9 @@ function CardWithTable({
                 pageCount={pageCount}
                 onPageChange={onPageChange}
             />
-        </div>
-    </div>
+        </CardFooter>
+    </Card>
   );
 }
+
+    
