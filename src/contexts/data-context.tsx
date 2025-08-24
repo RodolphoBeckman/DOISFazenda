@@ -101,10 +101,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const addCow = (cow: Cow) => {
     setData((prevData) => {
-      // Avoid adding duplicates
-      if (prevData.cows.some(c => c.id.trim().toLowerCase() === cow.id.trim().toLowerCase())) {
-        return prevData;
-      }
       return {
         ...prevData,
         cows: [...prevData.cows, cow],
