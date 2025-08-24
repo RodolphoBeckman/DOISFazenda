@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect } from "react"
@@ -27,7 +26,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useSettings } from "@/contexts/settings-context"
 import { useData } from "@/contexts/data-context"
 import { CowSchema, type Cow } from "@/lib/data-schemas"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog"
 
 type FormValues = z.infer<typeof CowSchema>;
 
@@ -87,7 +86,7 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                     <FormItem>
                         <FormLabel>Brinco Nº</FormLabel>
                         <FormControl>
-                        <Input placeholder="Ex: 826" {...field} disabled />
+                        <Input placeholder="Ex: 826" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -114,7 +113,7 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Origem</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                             <SelectValue placeholder="Selecione a origem..." />
@@ -137,7 +136,7 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Fazenda</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                             <SelectValue placeholder="Selecione a fazenda..." />
@@ -160,7 +159,7 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Lote</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                             <SelectValue placeholder="Selecione o lote..." />
@@ -197,7 +196,7 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                             <SelectValue placeholder="Selecione o status..." />
@@ -219,7 +218,7 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Status do Cadastro</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                             <SelectValue placeholder="Selecione o status..." />
@@ -302,6 +301,9 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
                 />
                 </div>
                 <DialogFooter className="border-t pt-4 mt-4">
+                    <DialogClose asChild>
+                      <Button variant="outline">Cancelar</Button>
+                    </DialogClose>
                     <Button type="submit">Salvar Alterações</Button>
                 </DialogFooter>
             </form>
@@ -310,5 +312,3 @@ export default function EditCowDialog({ cow, isOpen, onClose }: EditCowDialogPro
     </Dialog>
   );
 }
-
-    

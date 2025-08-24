@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -15,7 +14,7 @@ interface DataContextType {
   births: Birth[];
   iatfs: IATF[];
   addCow: (cow: Cow) => void;
-  updateCow: (id: string, updatedCow: Cow) => void;
+  updateCow: (oldId: string, updatedCow: Cow) => void;
   deleteCow: (id: string) => void;
   updateCowsLot: (ids: string[], newLot: string) => void;
   addBirth: (birth: Birth) => void;
@@ -108,11 +107,23 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const updateCow = (id: string, updatedCow: Cow) => {
-    setData((prevData) => ({
-      ...prevData,
-      cows: prevData.cows.map(cow => cow.id === id ? updatedCow : cow),
-    }));
+  const updateCow = (oldId: string, updatedCow: Cow) => {
+    setData((prevData) => {
+      const newCows = prevData.cows.map(cow => (cow.id === oldId ? updatedCow : cow));
+      
+      // If the ID has changed, we need to update related records
+      if (oldId !== updatedCow.id) {
+        const newBirths = prevData.births.map(birth => 
+          birth.cowId === oldId ? { ...birth, cowId: updatedCow.id } : birth
+        );
+        const newIatfs = prevData.iatfs.map(iatf => 
+          iatf.cowId === oldId ? { ...iatf, cowId: updatedCow.id } : iatf
+        );
+        return { cows: newCows, births: newBirths, iatfs: newIatfs };
+      }
+      
+      return { ...prevData, cows: newCows };
+    });
   }
 
   const deleteCow = (id: string) => {
@@ -141,7 +152,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             b.date && newBirth.date &&
             new Date(b.date).getTime() === new Date(newBirth.date).getTime()
         );
-        if (newBirth.date && birthExists) {
+        if (newBirth.date && birthExists && !newBirth.animal) {
             return prevData;
         }
 
