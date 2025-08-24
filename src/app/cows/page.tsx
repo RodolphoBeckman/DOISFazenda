@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button"
 import { PaginationComponent } from '@/components/pagination';
 import { ArrowDownAZ, ArrowUpAZ, ChevronDown, FilterX, PencilRuler, PlusCircle, Search, Trash2, Archive, Users, GitCommitVertical, GitBranch, Download, Baby } from "lucide-react"
@@ -570,7 +570,6 @@ function CardWithTable({
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
           <Table>
               <TableHeader>
                 <TableRow>
@@ -651,7 +650,6 @@ function CardWithTable({
                 ))}
               </TableBody>
             </Table>
-          </div>
       </CardContent>
        <CardFooter className="flex items-center justify-between p-4 border-t">
             <div className="flex items-center gap-2">
@@ -681,5 +679,3 @@ function CardWithTable({
     </Card>
   );
 }
-
-    
